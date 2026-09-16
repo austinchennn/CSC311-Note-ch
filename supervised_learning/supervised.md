@@ -8,19 +8,19 @@
 **分类 (classification)**：输出为有限离散类别的监督学习任务。
 > 任务类型只取决于**输出**类型，与输入类型无关。
 
-**输入向量 (input vector)**：$\mathbf{x} \in \mathbb{R}^D$，每个分量 $x_i$ 为一个**特征 (feature)**，$D$ 为特征数。第 $i$ 个样本记作 $\mathbf{x}^{(i)}$（上标带括号表示样本索引，与幂区分）。
+**输入向量 (input vector)**： $\mathbf{x} \in \mathbb{R}^D$ ，每个分量 $x_i$ 为一个**特征 (feature)**， $D$ 为特征数。第 $i$ 个样本记作 $\mathbf{x}^{(i)}$ （上标带括号表示样本索引，与幂区分）。
 
-**目标输出 (target output) / 预测输出 (predicted output)**：$t$ 表示真实标签（ground truth），$y$ 表示模型预测值。回归中 $t \in \mathbb{R}$；分类中 $t \in \{1,\dots,C\}$。
+**目标输出 (target output) / 预测输出 (predicted output)**： $t$ 表示真实标签（ground truth）， $y$ 表示模型预测值。回归中 $t \in \mathbb{R}$ ；分类中 $t \in \{1,\dots,C\}$ 。
 
-**训练集 (training set)**：$N$ 个输入-输出对 $\{(\mathbf{x}^{(1)},t^{(1)}),\dots,(\mathbf{x}^{(N)},t^{(N)})\}$。
+**训练集 (training set)**： $N$ 个输入-输出对 $\{(\mathbf{x}^{(1)},t^{(1)}),\dots,(\mathbf{x}^{(N)},t^{(N)})\}$ 。
 
-**假设 / 预测器 / 模型 (hypothesis/predictor/model)** $f$：从输入 $\mathbf{x}$ 到预测 $y=f(\mathbf{x})$ 的具体映射。回归中称**回归器**，分类中称**分类器**。
+**假设 / 预测器 / 模型 (hypothesis/predictor/model)** $f$ ：从输入 $\mathbf{x}$ 到预测 $y=f(\mathbf{x})$ 的具体映射。回归中称**回归器**，分类中称**分类器**。
 
-**模型族 (model family)**：结构相同的一类假设的集合（如所有形如「$x_1\geq r$ 则预测A」的分类器，$r$ 可变）。
+**模型族 (model family)**：结构相同的一类假设的集合（如所有形如「 $x_1\geq r$ 则预测A」的分类器， $r$ 可变）。
 
-**学习 (learning)**：用训练数据 $\mathcal{D}$、通过学习算法 $\mathcal{A}$ 从模型族中选出一个具体假设 $f$ 的过程（本质是优化问题，呼应 Idea #1）。
+**学习 (learning)**：用训练数据 $\mathcal{D}$ 、通过学习算法 $\mathcal{A}$ 从模型族中选出一个具体假设 $f$ 的过程（本质是优化问题，呼应 Idea #1）。
 
-**推断 (inference)**：用已训练好的假设 $f$ 对新输入做预测，$y=f(\mathbf{x})$。
+**推断 (inference)**：用已训练好的假设 $f$ 对新输入做预测， $y=f(\mathbf{x})$ 。
 
 **决策边界 (decision boundary)**：数据空间中的一个子集——在该子集上，输入发生微小扰动就会使预测结果发生改变；决策边界唯一确定了分类器的行为。
 
@@ -39,10 +39,12 @@
 ## 二、公式
 
 准确率 (accuracy rate) / 错误率 (error rate)：
+
 $$
 \text{accuracy}=\frac{\sum_{i=1}^N \mathbb{I}[t^{(i)}=y^{(i)}]}{N},\qquad
 \text{error rate}=1-\text{accuracy}
 $$
+
 （准确率只对分类器定义：回归中 $t,y$ 连续，精确相等几乎不可能成立，且误差有大小之分，不能简单地"对/错"二分。）
 
 ## 三、方法论：监督学习工作流
@@ -70,7 +72,7 @@ $$
 
 ## 五、例子（精简保留）
 
-- **叶片分类**（贯穿全文的运行示例）：用宽度、高度两个特征预测橡树/枫树；$D=2$ 时可在平面上可视化数据空间和决策边界。
+- **叶片分类**（贯穿全文的运行示例）：用宽度、高度两个特征预测橡树/枫树； $D=2$ 时可在平面上可视化数据空间和决策边界。
 - **图像/文本的向量化**：MNIST 手写数字图像 $28\times28$ 像素 → $D=784$ 维向量（每个像素强度为一个特征）；文本可用**二值词袋 (binary bag of words)** 特征表示（词表中每个词对应一个 0/1 特征）。
 - **数据代表性偏差的真实案例**：
   - Buolamwini & Gebru (2018)：商业人脸识别系统对深色皮肤女性的错误率高达 34%，浅色皮肤男性错误率不到 1%，原因是训练数据以浅肤色人脸为主；
