@@ -35,7 +35,7 @@
 - 例：整体准确率相同，但对不同群体（性别、肤色、历史弱势群体）可能存在系统性偏差（癌症风险预测、人脸识别、简历筛选）。
 
 ### 4. ML 描述几何过程 (Geometric Processes)
-- 数据点 = 高维空间中的向量：D 个特征 → \(\mathbb{R}^D\) 中的点（例：叶片宽高 → \(\mathbb{R}^2\)）。
+- 数据点 = 高维空间中的向量：D 个特征 → $\mathbb{R}^D$ 中的点（例：叶片宽高 → $\mathbb{R}^2$）。
 - 可用**距离 (distance)、相似度 (similarity)、变换 (transformation)** 等几何概念分析数据；坐标轴旋转不改变点间距离，说明表示与具体度量方式无关 → 支撑**分布式表示 (distributed representations)**、**词嵌入 (embeddings)** 等概念。
 - 模型 = 对数据集的几何变换；损失函数与优化过程 = 在模型空间中寻找最优点的几何过程 (geometric process)。
 - 结论：数据、模型、损失均可视为几何对象/过程（geometric objects/processes）—— 数据空间几何决定能学到什么，模型空间几何决定可选模型范围，损失曲面 (loss landscape) 几何决定能否找到好模型。
