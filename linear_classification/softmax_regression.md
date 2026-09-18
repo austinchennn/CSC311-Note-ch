@@ -15,3 +15,34 @@
 **Softmax 函数**：把 logits 向量转换成一个合法的概率分布（各分量非负且和为 1）的函数；是 sigmoid 从二分类到多分类的推广。
 
 **多分类交叉熵损失 (multi-class cross-entropy loss)**：二分类交叉熵在 $K$ 类情形下的推广，用独热目标向量与预测概率向量的对数做内积取负。
+
+## 二、公式
+
+每个类别的线性得分与堆叠成的得分向量：
+
+$$
+z_k=\sum_{j=1}^D w_{k,j}x_j+b_k=\mathbf{w}_k^\top\mathbf{x},\qquad \mathbf{z}=\mathbf{W}\mathbf{x}
+$$
+
+Softmax 函数：
+
+$$
+y_k=\frac{\exp(z_k)}{\sum_{k'=1}^K\exp(z_{k'})}
+$$
+
+多分类交叉熵损失（单样本，向量形式）：
+
+$$
+\mathcal{L}_{CE}=-\sum_{k=1}^K t_k\log(y_k)=-\mathbf{t}^\top\log(\mathbf{y})
+$$
+
+由于 $\mathbf{t}$ 是独热向量，上式只剩一项非零——损失恰好等于**真实类别对应概率的负对数**，即模型给正确类别分配的概率越低，损失越大。
+
+梯度与更新规则：
+
+$$
+\frac{\partial\mathcal{L}_{CE}}{\partial\mathbf{w}_k}=(y_k-t_k)\mathbf{x},\qquad
+\mathbf{w}_k\leftarrow\mathbf{w}_k-\frac{\alpha}{N}\sum_{i=1}^N(y_k^{(i)}-t_k^{(i)})\mathbf{x}^{(i)}
+$$
+
+与二分类逻辑回归的梯度形式 $(y-t)\mathbf{x}$ 完全一致，只是现在对每个类别 $k$ 各自维护一套权重 $\mathbf{w}_k$。
