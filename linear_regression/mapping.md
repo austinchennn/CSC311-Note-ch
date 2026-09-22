@@ -4,11 +4,11 @@
 
 ## 一、核心定义
 
-**特征映射 / 基展开 (feature mapping / basis expansion)**
+#### 特征映射 / 基展开 (feature mapping / basis expansion)
 
 一个函数 $\psi(\mathbf{x}):\mathbb{R}^D\rightarrow\mathbb{R}^d$ ，把原始输入向量变换成新的特征表示。用 $\psi(\mathbf{x}^{(i)})$ 替换原始 $\mathbf{x}^{(i)}$ 后再跑线性回归，得到的模型在**变换后的特征空间中是线性的**，但在**原始输入空间中可以表达非线性关系**。
 
-**多项式特征映射 (polynomial feature mapping)**
+#### 多项式特征映射 (polynomial feature mapping)
 
 次数为 $M$ 的映射，把标量输入 $x$ 展开成它的各次幂：
 
@@ -18,7 +18,7 @@ $$
 
 $M$ （多项式的**次数 / degree**）是一个超参数。对向量输入 $\mathbf{x}\in\mathbb{R}^D$ ，次数- $M$ 映射包含所有总次数不超过 $M$ 的单项式（各特征乘积项），特征数量按 $\binom{D+M}{M}$ 增长， $D$ 或 $M$ 增大时会迅速膨胀。
 
-**多项式回归 (polynomial regression)**
+#### 多项式回归 (polynomial regression)
 
 以多项式特征为输入的线性回归，拟合
 
@@ -26,7 +26,7 @@ $$
 y=w_0+w_1x+w_2x^2+\dots+w_Mx^M=\sum_{j=0}^M w_jx^j=\psi(x)^\top\mathbf{w}
 $$
 
-**正弦（傅里叶）映射 (sinusoidal / Fourier mapping)**
+#### 正弦（傅里叶）映射 (sinusoidal / Fourier mapping)
 
 用不同频率的 $\sin,\cos$ 作为基函数，适合有周期性结构的数据（如按年变化的温度）。
 
