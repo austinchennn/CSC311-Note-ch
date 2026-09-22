@@ -76,10 +76,17 @@ $$
 \nabla_{\mathbf{w}}\mathcal{E}(\mathbf{w})=\frac{1}{N}\mathbf{X}^\top(\mathbf{X}\mathbf{w}-\mathbf{t})
 $$
 
-令梯度为零得到的直接解（闭式解）：
+令梯度为零，推导直接解（闭式解）：
 
 $$
-\mathbf{w}=(\mathbf{X}^\top\mathbf{X})^{-1}\mathbf{X}^\top\mathbf{t}
+\begin{aligned}
+\frac{1}{N}\mathbf{X}^\top(\mathbf{X}\mathbf{w}-\mathbf{t}) &= \mathbf{0} \\
+\mathbf{X}^\top(\mathbf{X}\mathbf{w}-\mathbf{t}) &= \mathbf{0} \\
+\mathbf{X}^\top\mathbf{X}\mathbf{w}-\mathbf{X}^\top\mathbf{t} &= \mathbf{0} \\
+\mathbf{X}^\top\mathbf{X}\mathbf{w} &= \mathbf{X}^\top\mathbf{t} \\
+(\mathbf{X}^\top\mathbf{X})^{-1}\mathbf{X}^\top\mathbf{X}\mathbf{w} &= (\mathbf{X}^\top\mathbf{X})^{-1}\mathbf{X}^\top\mathbf{t} \\
+\mathbf{w} &= (\mathbf{X}^\top\mathbf{X})^{-1}\mathbf{X}^\top\mathbf{t}
+\end{aligned}
 $$
 
 梯度下降的通用更新规则：
