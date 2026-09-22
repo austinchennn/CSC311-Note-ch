@@ -4,7 +4,7 @@
 
 ## 一、核心定义
 
-**1-最近邻分类器 (1-NN)**
+#### 1-最近邻分类器 (1-NN)
 
 对测试点 $\mathbf{x}$ ，在训练集中找到距离最近的点 $\mathbf{x}^{(C)}$ ：
 
@@ -14,31 +14,31 @@ $$
 
 然后直接复制其标签作为预测： $y=t^{(C)}$ 。**没有真正的"训练"过程**（惰性学习 / lazy learning，全部计算延迟到推断阶段）。
 
-**k-最近邻算法 (k-NN)**
+#### k-最近邻算法 (k-NN)
 
 找到距 $\mathbf{x}$ 最近的 $k$ 个训练样本，取其标签的**多数类 (majority class / majority vote)** 作为预测。
 
-**Voronoi 图 (Voronoi diagram)**
+#### Voronoi 图 (Voronoi diagram)
 
 把空间划分为若干区域，每个区域内的点都离某一训练样本最近；1-NN 的决策边界即 Voronoi 图中不同类别区域的分界线（由线段构成）。
 
-**超参数 (hyperparameter)** $k$
+#### 超参数 (hyperparameter) $k$
 
 需要人工/验证集选定、不由训练过程自动学习的设置。
 
-**过拟合 (overfitting)**
+#### 过拟合 (overfitting)
 
 模型学到训练数据中不可泛化的噪声/个别样本特性（ $k$ 过小，如 $k=1$ 时训练准确率恒为100%，但边界"锯齿状"、对噪声敏感）。
 
-**欠拟合 (underfitting)**
+#### 欠拟合 (underfitting)
 
 模型过于简单、无法捕捉真实规律（ $k$ 过大，极端情况 $k=N$ 时永远预测训练集中的多数类）。
 
-**标准化 / 归一化 (standardize / normalize)**
+#### 标准化 / 归一化 (standardize / normalize)
 
 将每个特征变换为均值0、方差1，避免量纲不同导致某特征主导距离计算。
 
-**维度灾难 (curse of dimensionality)**
+#### 维度灾难 (curse of dimensionality)
 
 高维空间中大多数点彼此距离都很远，"最近邻"的概念因而变得不再有意义。
 

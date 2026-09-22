@@ -4,7 +4,7 @@
 
 ## 一、核心定义
 
-**梯度下降 (gradient descent)**
+#### 梯度下降 (gradient descent)
 
 一种迭代式最优化算法，用于最小化函数 $J(\mathbf{w})$ 。
 
@@ -24,23 +24,23 @@ $$
 
 所有分量**同时**更新（不能一个坐标接一个坐标地更新，否则后面的偏导会用到已改变的权重）。
 
-**迭代 (iteration)**
+#### 迭代 (iteration)
 
 每应用一次更新规则称为一次迭代。
 
-**学习率 (learning rate)** $\alpha\in\mathbb{R}$
+#### 学习率 (learning rate) $\alpha\in\mathbb{R}$
 
 控制每步更新幅度的超参数，典型取值在 $0.001$ 到 $0.1$ 之间，需按具体问题调优。
 
-**训练曲线 (training curve)**
+#### 训练曲线 (training curve)
 
 训练代价随迭代次数变化的曲线，用于监控梯度下降是否收敛、诊断学习率是否合适。
 
-**局部最小值 (local minimum) / 全局最小值 (global minimum)**
+#### 局部最小值 (local minimum) / 全局最小值 (global minimum)
 
 梯度下降只利用局部信息，因此只能保证找到局部最小值；不同初始化可能收敛到不同的局部最小值。但线性回归的均方误差是**凸函数 (convex)**（碗状二次函数），只有一个最小值，因此梯度下降一定能找到全局最小值。
 
-**特征缩放 / 标准化 (feature scaling / standardization)**
+#### 特征缩放 / 标准化 (feature scaling / standardization)
 
 训练前将各特征化为可比较的量纲（如减均值除以标准差），避免损失曲面呈"峡谷状 (ravine)"导致优化路径来回震荡 (zig-zag)。
 
