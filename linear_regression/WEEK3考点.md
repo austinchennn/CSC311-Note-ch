@@ -70,7 +70,11 @@ $$
 
 **矩阵拼图**：目标是得到一个与权重 $\mathbf{w}$ 维度相同的 $(D+1)\times1$ 梯度向量。要用矩阵乘法得到这个维度，必须拿 $\mathbf{X}^\top$ （维度 $(D+1)\times N$ ）去乘 $\mathbf{r}$ （维度 $N\times1$ ）。
 
-**结论**：$\sum_i r^{(i)}\mathbf{x}^{(i)}$ 等价于 $\mathbf{X}^\top\mathbf{r}$ ，展开即 $\mathbf{X}^\top(\mathbf{X}\mathbf{w}-\mathbf{t})$ 。
+**结论**：以下四种写法完全等价，统称为**代价函数关于权重参数的未缩放总梯度 (unscaled gradient)**——之所以"未缩放"，是因为还没有除以样本数 $N$（对比 $\nabla_{\mathbf{w}}\mathcal{E}(\mathbf{w})=\frac{1}{N}\mathbf{X}^\top(\mathbf{X}\mathbf{w}-\mathbf{t})$ ，这里少了 $\frac{1}{N}$ ）：
+
+$$
+\sum_i(\mathbf{w}^\top\mathbf{x}^{(i)}-t^{(i)})\mathbf{x}^{(i)}=\sum_i r^{(i)}\mathbf{x}^{(i)}=\mathbf{X}^\top\mathbf{r}=\mathbf{X}^\top(\mathbf{X}\mathbf{w}-\mathbf{t})
+$$
 
 > $\mathbf{X}^\top\mathbf{r}$ 的含义：设计矩阵的转置（ $(D+1)\times N$ ）与残差列向量 $\mathbf{r}$（ $N\times1$ ）相乘，本质上是把 $N$ 个样本各自的"残差 × 特征向量"按权重维度对齐后逐项累加——第 $j$ 行结果就是 $\sum_i r^{(i)}x_j^{(i)}$ ，恰好对应 $\sum_i r^{(i)}\mathbf{x}^{(i)}$ 的第 $j$ 个分量；这正是矩阵乘法把逐样本求和"打包"成一次矩阵运算的地方。
 
