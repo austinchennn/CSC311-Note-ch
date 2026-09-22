@@ -4,11 +4,15 @@
 
 ## 一、核心定义
 
-**正则化 (regularization)**：对训练过程的一种修改，使模型的选择不完全依据训练误差，还依据其他准则（通常是偏好更简单的模型），从而改善泛化、减少过拟合。
+**正则化 (regularization)**
 
-**正则化项 / 正则化函数 (regularization term / regularizer)** $\mathcal{R}(\mathbf{w})$ ：直接施加在代价函数上的惩罚项，用来编码"偏好某些模型"的准则；加入正则化项后，优化目标仍是让总代价最低，只是"代价"不再单指 MSE。
+对训练过程的一种修改，使模型的选择不完全依据训练误差，还依据其他准则（通常是偏好更简单的模型），从而改善泛化、减少过拟合。
 
-**正则化后的代价函数**：
+**正则化项 / 正则化函数 (regularization term / regularizer)** $\mathcal{R}(\mathbf{w})$
+
+直接施加在代价函数上的惩罚项，用来编码"偏好某些模型"的准则；加入正则化项后，优化目标仍是让总代价最低，只是"代价"不再单指 MSE。
+
+**正则化后的代价函数**
 
 $$
 \mathcal{E}_{reg}(\mathbf{w})=\mathcal{E}(\mathbf{w})+\lambda\mathcal{R}(\mathbf{w})
@@ -16,7 +20,7 @@ $$
 
 其中 $\mathcal{E}(\mathbf{w})$ 是原始 MSE， $\lambda$ 是控制两项相对重要性的**超参数**。
 
-**L2 正则化项 (L2 regularization term / L2 regularizer)**：
+**L2 正则化项 (L2 regularization term / L2 regularizer)**
 
 $$
 \mathcal{R}(\mathbf{w})=\frac{1}{2}\lVert\mathbf{w}\rVert_2^2=\frac{1}{2}\sum_{j=1}^D w_j^2
