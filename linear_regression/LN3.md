@@ -88,6 +88,10 @@ $$
 \mathbf{w}\leftarrow\mathbf{w}-\alpha\nabla_{\mathbf{w}}F(\mathbf{w})
 $$
 
+- $\alpha$ （学习率 / learning rate）：纯粹的标量常数。训练开始前设定好（如 $\alpha=0.01$ ）之后就固定了，在基础梯度下降算法中从头到尾不会自动改变。
+- $\nabla_{\mathbf{w}}F(\mathbf{w})$ （梯度 / gradient）：代价函数关于权重的偏导数（增量）。这个值是动态的，只要 $\mathbf{w}$ 变了，梯度就会跟着变。
+- $\alpha\nabla_{\mathbf{w}}F(\mathbf{w})$ （实际更新步幅 / actual step size）：学习率与梯度相乘后的结果，才是模型参数在高维权重空间中真正移动的距离。
+
 代入线性回归的梯度后，线性回归专用的梯度下降更新规则：
 
 $$
