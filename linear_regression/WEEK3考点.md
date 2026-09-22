@@ -56,7 +56,11 @@ $$
 
 推导代价函数梯度时会得到求和式 $\sum_i(\mathbf{w}^\top\mathbf{x}^{(i)}-t^{(i)})\mathbf{x}^{(i)}$ ，如何把它变成简洁的矩阵运算 $\mathbf{X}^\top(\mathbf{X}\mathbf{w}-\mathbf{t})$ ？
 
+> $\sum_i(\mathbf{w}^\top\mathbf{x}^{(i)}-t^{(i)})\mathbf{x}^{(i)}$ 的含义：这是**未向量化（逐样本求和）形式的梯度**——对第 $i$ 个样本，先算出标量残差 $(\mathbf{w}^\top\mathbf{x}^{(i)}-t^{(i)})$ ，再乘以该样本的特征向量 $\mathbf{x}^{(i)}\in\mathbb{R}^{D+1}$ ，得到一个与 $\mathbf{w}$ 同维度的向量；对全部 $N$ 个样本的这些向量逐项相加，就是（未除以 $N$ 的）代价函数梯度 $N\nabla_{\mathbf{w}}\mathcal{E}(\mathbf{w})$ 。
+
 **定义残差**：令标量残差 $r^{(i)}=\mathbf{w}^\top\mathbf{x}^{(i)}-t^{(i)}$ ，求和式变为 $\sum_i r^{(i)}\mathbf{x}^{(i)}$ 。
+
+> $\sum_i r^{(i)}\mathbf{x}^{(i)}$ 的含义：只是把上式中的残差用符号 $r^{(i)}$ 简写代替，含义完全不变——仍是"每个样本的残差（标量）乘以该样本特征向量（列向量），共 $N$ 项相加"，只是记号更简洁，便于下一步凑成矩阵乘法 $\mathbf{X}^\top\mathbf{r}$ 。
 
 **维度盘点**：
 - $r^{(i)}$ 是一个 $1\times1$ 的标量。
