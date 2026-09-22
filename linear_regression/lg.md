@@ -4,9 +4,13 @@
 
 ## 一、核心定义
 
-**归纳偏置 (inductive bias)**：模型对"输入-输出关系"所做的假设；由没有免费午餐定理 (no free lunch theorem) 可知，不存在普适最优算法，因此选对归纳偏置（即选对模型族）是学习能否成功的关键。
+**归纳偏置 (inductive bias)**
 
-**线性模型 (linear model，标量形式)**：限制映射函数 $f$ 为特征的线性组合：
+模型对"输入-输出关系"所做的假设；由没有免费午餐定理 (no free lunch theorem) 可知，不存在普适最优算法，因此选对归纳偏置（即选对模型族）是学习能否成功的关键。
+
+**线性模型 (linear model，标量形式)**
+
+限制映射函数 $f$ 为特征的线性组合：
 
 $$
 y=f(\mathbf{x})=w_1x_1+w_2x_2+\dots+w_Dx_D+b=\sum_{j=1}^D w_jx_j+b
@@ -14,9 +18,13 @@ $$
 
 其中 **权重向量 (weight vector)** $\mathbf{w}$ 控制各特征的贡献大小/方向，**偏置 (bias / intercept)** $b$ 是让超平面 (hyperplane) 可以不过原点的平移项——若去掉 $b$ ，模型被迫过原点，表达能力大打折扣，因此偏置项通常必须保留。
 
-**向量化 (vectorization)**：把标量形式的模型改写成矩阵/向量运算，目的不仅是数学上简洁，更是为了利用 GPU/CPU 的并行计算能力和 NumPy/PyTorch 等库的高度优化实现（避免逐元素 Python 循环的开销）。
+**向量化 (vectorization)**
 
-**技巧：把偏置当作权重**：引入恒为 1 的哑特征 (dummy feature) $x_0=1$ ，对应权重 $w_0=b$ ，即可把偏置吸收进权重向量：
+把标量形式的模型改写成矩阵/向量运算，目的不仅是数学上简洁，更是为了利用 GPU/CPU 的并行计算能力和 NumPy/PyTorch 等库的高度优化实现（避免逐元素 Python 循环的开销）。
+
+**技巧：把偏置当作权重**
+
+引入恒为 1 的哑特征 (dummy feature) $x_0=1$ ，对应权重 $w_0=b$ ，即可把偏置吸收进权重向量：
 
 $$
 f(\mathbf{x})=\sum_{j=0}^D w_jx_j=\mathbf{w}^\top\mathbf{x}
@@ -24,11 +32,17 @@ $$
 
 通过引入 $x_0=1$ ，原本分开的权重向量 $\mathbf{w}$ 和偏置 $b$ 被合并成了一个扩充后的权重向量 $\mathbf{w}=[w_0,w_1,\dots,w_D]^\top\in\mathbb{R}^{D+1}$（其中 $w_0=b$ ），而特征向量也扩充成了 $\mathbf{x}=[1,x_1,\dots,x_D]^\top\in\mathbb{R}^{D+1}$ 。两者维度均为 $D+1$ ，因此 $\mathbf{w}^\top\mathbf{x}$ 是一个标量，等价于展开形式 $\sum_{j=1}^D w_jx_j+b$ 。注意这与第 9 行公式中未加哑特征的 $\mathbf{x},\mathbf{w}\in\mathbb{R}^D$ 不同。
 
-**数据矩阵 / 设计矩阵 (data matrix / design matrix)** $\mathbf{X}\in\mathbb{R}^{N\times(D+1)}$ ：每一行是一个样本的（含哑特征的）特征向量。其中 $N$ 是样本数量（数据集中样本/数据点的个数），$D$ 是原始特征维度（每个样本的特征个数）；$D+1$ 是因为加上了第 19 条中引入的哑特征 $x_0=1$ 。
+**数据矩阵 / 设计矩阵 (data matrix / design matrix)** $\mathbf{X}\in\mathbb{R}^{N\times(D+1)}$
 
-**模型参数 (model parameter) vs 超参数 (hyperparameter)**：前者由学习算法从训练数据中自动学出（如 $\mathbf{w}$ ），后者是训练前人为设定、通常用验证集调优的设置（如 kNN 的 $K$ ）。
+每一行是一个样本的（含哑特征的）特征向量。其中 $N$ 是样本数量（数据集中样本/数据点的个数），$D$ 是原始特征维度（每个样本的特征个数）；$D+1$ 是因为加上了第 19 条中引入的哑特征 $x_0=1$ 。
 
-**损失函数 (loss function)**：衡量单个样本预测值与真实值之间差异的函数。回归常用**平方误差损失 (squared error loss)**：
+**模型参数 (model parameter) vs 超参数 (hyperparameter)**
+
+前者由学习算法从训练数据中自动学出（如 $\mathbf{w}$ ），后者是训练前人为设定、通常用验证集调优的设置（如 kNN 的 $K$ ）。
+
+**损失函数 (loss function)**
+
+衡量单个样本预测值与真实值之间差异的函数。回归常用**平方误差损失 (squared error loss)**：
 
 $$
 \mathcal{L}(y,t)=\frac{1}{2}(y-t)^2
@@ -36,7 +50,9 @@ $$
 
 差值 $y-t$ 称为**残差 (residual)**；乘 $1/2$ 是为了求导时抵消平方产生的系数 2。
 
-**代价函数 (cost function)**：训练集上所有样本损失的平均值，本质上是关于参数 $\mathbf{w}$ 的函数：
+**代价函数 (cost function)**
+
+训练集上所有样本损失的平均值，本质上是关于参数 $\mathbf{w}$ 的函数：
 
 $$
 \mathcal{E}(\mathbf{w})=\frac{1}{N}\sum_{i=1}^N\mathcal{L}(y^{(i)},t^{(i)})
@@ -44,7 +60,9 @@ $$
 
 代入平方误差得到**均方误差 (mean squared error, MSE)** 代价函数。
 
-**$L^2$ 范数 (Euclidean norm)**： $\lVert\mathbf{v}\rVert_2=\sqrt{\sum_i v_i^2}$ ，满足 $\lVert\mathbf{v}\rVert_2^2=\mathbf{v}^\top\mathbf{v}$ 。
+**$L^2$ 范数 (Euclidean norm)**
+
+$\lVert\mathbf{v}\rVert_2=\sqrt{\sum_i v_i^2}$ ，满足 $\lVert\mathbf{v}\rVert_2^2=\mathbf{v}^\top\mathbf{v}$ 。
 
 ## 二、公式（向量化结果）
 
@@ -53,6 +71,8 @@ $$
 $$
 \mathbf{y}=\mathbf{X}\mathbf{w}
 $$
+
+其中 $\mathbf{y}=(y^{(1)},\dots,y^{(N)})^\top\in\mathbb{R}^N$ 是模型对整份训练集给出的**预测值向量**（第 $i$ 个分量 $y^{(i)}=f(\mathbf{x}^{(i)})=\mathbf{w}^\top\mathbf{x}^{(i)}$ 是第 $i$ 个样本的预测输出）；$\mathbf{t}=(t^{(1)},\dots,t^{(N)})^\top\in\mathbb{R}^N$ 是对应的**真实标签向量 / 目标向量 (target vector)**，即数据集中每个样本自带的真实值。两者维度都是 $N$（样本数），一一对应：$y^{(i)}$ 是模型猜的，$t^{(i)}$ 是标准答案，损失函数就是在衡量两者的差距。
 
 MSE 代价函数的等价写法：
 

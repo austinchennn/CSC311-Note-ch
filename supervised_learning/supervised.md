@@ -4,37 +4,66 @@
 
 ## 一、核心定义
 
-**回归 (regression)**：输出为连续数值的监督学习任务。
-**分类 (classification)**：输出为有限离散类别的监督学习任务。
+**回归 (regression)**
+
+输出为连续数值的监督学习任务。
+
+**分类 (classification)**
+
+输出为有限离散类别的监督学习任务。
+
 > 任务类型只取决于**输出**类型，与输入类型无关。
 
-**输入向量 (input vector)**： $\mathbf{x} \in \mathbb{R}^D$ ，每个分量 $x_i$ 为一个**特征 (feature)**， $D$ 为特征数。第 $i$ 个样本记作 $\mathbf{x}^{(i)}$ （上标带括号表示样本索引，与幂区分）。
+**输入向量 (input vector)**
 
-**目标输出 (target output) / 预测输出 (predicted output)**： $t$ 表示真实标签（ground truth）， $y$ 表示模型预测值。回归中 $t \in \mathbb{R}$ ；分类中 $t \in \{1,\dots,C\}$ 。
+$\mathbf{x} \in \mathbb{R}^D$ ，每个分量 $x_i$ 为一个**特征 (feature)**， $D$ 为特征数。第 $i$ 个样本记作 $\mathbf{x}^{(i)}$ （上标带括号表示样本索引，与幂区分）。
 
-**训练集 (training set)**： $N$ 个输入-输出对 $\{(\mathbf{x}^{(1)},t^{(1)}),\dots,(\mathbf{x}^{(N)},t^{(N)})\}$ 。
+**目标输出 (target output) / 预测输出 (predicted output)**
 
-**假设 / 预测器 / 模型 (hypothesis/predictor/model)** $f$ ：从输入 $\mathbf{x}$ 到预测 $y=f(\mathbf{x})$ 的具体映射。回归中称**回归器**，分类中称**分类器**。
+$t$ 表示真实标签（ground truth）， $y$ 表示模型预测值。回归中 $t \in \mathbb{R}$ ；分类中 $t \in \{1,\dots,C\}$ 。
 
-**模型族 (model family)**：结构相同的一类假设的集合（如所有形如「 $x_1\geq r$ 则预测A」的分类器， $r$ 可变）。
+**训练集 (training set)**
 
-**学习 (learning)**：用训练数据 $\mathcal{D}$ 、通过学习算法 $\mathcal{A}$ 从模型族中选出一个具体假设 $f$ 的过程（本质是优化问题，呼应 Idea #1）。
+$N$ 个输入-输出对 $\{(\mathbf{x}^{(1)},t^{(1)}),\dots,(\mathbf{x}^{(N)},t^{(N)})\}$ 。
 
-**推断 (inference)**：用已训练好的假设 $f$ 对新输入做预测， $y=f(\mathbf{x})$ 。
+**假设 / 预测器 / 模型 (hypothesis/predictor/model)** $f$
 
-**决策边界 (decision boundary)**：数据空间中的一个子集——在该子集上，输入发生微小扰动就会使预测结果发生改变；决策边界唯一确定了分类器的行为。
+从输入 $\mathbf{x}$ 到预测 $y=f(\mathbf{x})$ 的具体映射。回归中称**回归器**，分类中称**分类器**。
 
-**训练集 (training set) / 验证集 (validation set) / 测试集 (test set)**：
+**模型族 (model family)**
+
+结构相同的一类假设的集合（如所有形如「 $x_1\geq r$ 则预测A」的分类器， $r$ 可变）。
+
+**学习 (learning)**
+
+用训练数据 $\mathcal{D}$ 、通过学习算法 $\mathcal{A}$ 从模型族中选出一个具体假设 $f$ 的过程（本质是优化问题，呼应 Idea #1）。
+
+**推断 (inference)**
+
+用已训练好的假设 $f$ 对新输入做预测， $y=f(\mathbf{x})$ 。
+
+**决策边界 (decision boundary)**
+
+数据空间中的一个子集——在该子集上，输入发生微小扰动就会使预测结果发生改变；决策边界唯一确定了分类器的行为。
+
+**训练集 (training set) / 验证集 (validation set) / 测试集 (test set)**
+
 - 训练集：供学习算法选择假设；
 - 验证集：用于在不同模型/超参数之间做选择；
 - 测试集：从未参与任何模型决策，仅用于估计模型对新数据的泛化表现。
 一般划分比例：训练 60–80%，验证 10–20%，测试 10–20%。
 
-**超参数 (hyperparameter)**：影响模型但训练过程中保持不变、需要人工/验证集选定的取值。
+**超参数 (hyperparameter)**
 
-**过拟合 (overfitting)**：模型在训练集上表现好，但学到了不能泛化的噪声/个别样本特性，导致对新数据表现差的现象（复杂决策边界如三角形分类器可能是过拟合的信号）。
+影响模型但训练过程中保持不变、需要人工/验证集选定的取值。
 
-**特征工程 (Feature Engineering)**：设计与筛选特征的过程；特征选择决定了数据空间的几何结构，直接影响任务难度。
+**过拟合 (overfitting)**
+
+模型在训练集上表现好，但学到了不能泛化的噪声/个别样本特性，导致对新数据表现差的现象（复杂决策边界如三角形分类器可能是过拟合的信号）。
+
+**特征工程 (Feature Engineering)**
+
+设计与筛选特征的过程；特征选择决定了数据空间的几何结构，直接影响任务难度。
 
 ## 二、公式
 
