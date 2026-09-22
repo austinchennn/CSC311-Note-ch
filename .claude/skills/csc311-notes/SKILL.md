@@ -13,21 +13,44 @@ collection) of practice problems. Two workflows, one shared git/PR tail.
 
 **Input**: one or more URLs like `https://www.teach.cs.toronto.edu/~csc311notes/<topic>/<page>.html`.
 
-1. **Fetch the source.** Prefer raw HTML over WebFetch's summary when precision matters
-   (exact terminology, exact numeric examples, exact bolded terms):
+This is a **four-stage pipeline** — do not skip straight from fetch to summary. Each stage
+exists to prevent a specific failure mode observed in practice (dropped content, invented
+terminology, inconsistent formatting).
+
+1. **Pull the source down and convert to Markdown.** Fetch the raw HTML (don't rely on
+   WebFetch's lossy AI paraphrase for this stage — it silently drops content):
    ```
    curl -s "<url>" -A "Mozilla/5.0" -o <scratchpad>/<page>.html
    ```
-   Read/grep the raw HTML for headings, bolded terms, formulas, worked examples. Use
-   `WebFetch` only for quick verification questions (e.g. "what's the exact English term
-   for X"), and always re-quote-check rather than trust its paraphrase as verbatim.
+   Convert it to a clean Markdown scratch copy (headings, lists, math, tables, worked
+   examples, all preserved in source order) in the scratchpad directory. This is a working
+   artifact, not a repo file — it exists so nothing gets lost or reordered before
+   translation.
 
-2. **File location.** One note file per source page, same basename, inside a folder named
-   after the URL's topic segment at the repo root (sibling to `linear_regression/`,
-   `linear_classification/`, `supervised_learning/`). E.g. `dt_intro.html` →
-   `decision_trees/dt_intro.md`. Create the topic folder if it doesn't exist yet.
+2. **Full translation.** Translate that scratch Markdown into Chinese completely —
+   every definition, every theorem/proof, every formula, every worked example, every
+   methodological point, every "fundamental idea" callout. This is a translation pass, not
+   a summary pass: nothing gets cut yet. Keep it as a second scratch artifact.
 
-3. **File template:**
+3. **Summarize into notes.** This is the step where content gets restructured and tightened
+   into note form, but **completeness is non-negotiable**: every key term, every
+   definition, every example, every idea/theorem, and every formula from the source must
+   still be present in some form afterward — "summarize" means cut narrative fluff and
+   redundant phrasing, not cut substance. For every important term or phrase (definitions,
+   named theorems, named ideas, key technical phrases), keep the original English in
+   parentheses right after the Chinese, e.g. `归纳偏置 (inductive bias)`,
+   `信息不会产生负面作用 (information can't hurt)` — this applies throughout the note, not
+   just inside the "核心定义" section.
+
+4. **Apply the format shared with the rest of the repo** (below), so the new note reads as
+   part of the same set as the existing files, not a one-off.
+
+**File location.** One note file per source page, same basename, inside a folder named
+after the URL's topic segment at the repo root (sibling to `linear_regression/`,
+`linear_classification/`, `supervised_learning/`). E.g. `dt_intro.html` →
+`decision_trees/dt_intro.md`. Create the topic folder if it doesn't exist yet.
+
+**File template:**
    ```
    > 来源: <full source URL>
 
@@ -87,8 +110,11 @@ collection) of practice problems. Two workflows, one shared git/PR tail.
      Chinese label for a phenomenon the source only describes in prose, say so explicitly
      and give the verbatim original English wording (fetch and quote-check it — don't
      guess). See `linear_regression/gd.md`'s "量纲失衡例子" annotation for the pattern.
-   - **Compress examples** — "例子（精简保留）" means condensed to the essential
-     numbers/conclusion, not a full transcription of the source's walkthrough.
+   - **Compress prose, not content.** "例子（精简保留）" means trim the source's
+     narrative/setup language down to the essential numbers and conclusion — but every
+     example the source has must still appear as an entry; don't drop an example just to
+     shorten the section. Same principle for definitions/theorems/formulas: tighten the
+     wording, never the coverage.
    - **Methodology branches get nested sub-bullets**, not a run-on sentence — e.g. "α 太小
      →..." / "α 太大 →..." as separate `-` lines under the numbered point, not joined by
      "；".
