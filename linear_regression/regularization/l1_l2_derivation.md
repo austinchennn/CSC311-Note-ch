@@ -1,4 +1,4 @@
-> 来源: 补充内容（非课程原文）；相关课程笔记见 [linear_regression/regularization.md](../linear_regression/regularization.md)
+> 来源: 补充内容（非课程原文）；相关课程笔记见 [regularization.md](regularization.md)
 
 # L1 / L2 Regularization Derivation — 笔记
 
