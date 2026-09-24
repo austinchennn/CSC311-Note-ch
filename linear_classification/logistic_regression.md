@@ -77,11 +77,11 @@ $$
 
 **为什么不能用平方误差**：对一个被正确分类且高置信度的正例（如 $z=5$ ），平方误差 $(z-t)^2$ 仍然很大（如 $(5-1)^2=16$ ），会错误地惩罚"正确且自信"的预测，把决策边界推向错误方向。
 
-**为什么不能用零一损失**：由链式法则 $\frac{\partial\mathcal{L}_{0-1}}{\partial w_j}=\frac{\partial\mathcal{L}_{0-1}}{\partial z}\frac{\partial z}{\partial w_j}$ ，而 $\mathcal{L}_{0-1}$ 只在 $z$ 跨过阈值的瞬间才改变，其余位置导数恒为零——梯度下降完全无法更新参数。
+**为什么不能用零一损失**：由链式法则 $\frac{\partial\mathcal L_{0-1}}{\partial w_j}=\frac{\partial\mathcal L_{0-1}}{\partial z}\frac{\partial z}{\partial w_j}$ ，而 $\mathcal L_{0-1}$ 只在 $z$ 跨过阈值的瞬间才改变，其余位置导数恒为零——梯度下降完全无法更新参数。
 
 **为什么 sigmoid + 平方误差也不行**：设正例 $t=1$ 被严重误分类， $z=-5\Rightarrow y=\sigma(-5)\approx0.0067$ 。梯度中含有因子 $y(1-y)\approx0.0067\times0.9933\approx0.0066$ ，几乎为零——即使模型错得离谱，权重更新量也微乎其微。这说明 sigmoid 的"饱和区"恰好会把误差信号压缩没了，模型组件之间并非完全独立、可以随意搭配。
 
-**交叉熵梯度的推导（关键消去）**：用链式法则 $\frac{\partial\mathcal{L}_{CE}}{\partial w_j}=\frac{\partial\mathcal{L}_{CE}}{\partial y}\cdot\frac{dy}{dz}\cdot\frac{\partial z}{\partial w_j}$ ，三项分别为 $\big(-\frac{t}{y}+\frac{1-t}{1-y}\big)$ 、 $y(1-y)$ 、 $x_j$ 。相乘后 $y(1-y)$ 恰好与 $\big(-\frac{t}{y}+\frac{1-t}{1-y}\big)$ 中的分母完全抵消，化简得到极简形式：
+**交叉熵梯度的推导（关键消去）**：用链式法则 $\frac{\partial\mathcal L_{CE}}{\partial w_j}=\frac{\partial\mathcal L_{CE}}{\partial y}\cdot\frac{dy}{dz}\cdot\frac{\partial z}{\partial w_j}$ ，三项分别为 $\big(-\frac{t}{y}+\frac{1-t}{1-y}\big)$ 、 $y(1-y)$ 、 $x_j$ 。相乘后 $y(1-y)$ 恰好与 $\big(-\frac{t}{y}+\frac{1-t}{1-y}\big)$ 中的分母完全抵消，化简得到极简形式：
 
 $$
 \frac{\partial\mathcal{L}_{CE}}{\partial w_j}=(y-t)x_j
