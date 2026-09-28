@@ -1,7 +1,7 @@
 \documentclass[10pt]{article}
 \usepackage[letterpaper,margin=0.35in]{geometry}
 \usepackage{amsmath,amssymb,bm}
-\newcommand{\mathbbm}[1]{\mathbb{#1}}
+\newcommand{\ind}{\mathbb{I}}
 \usepackage{multicol}
 \usepackage{graphicx}
 \usepackage{enumitem}
@@ -33,7 +33,7 @@
 \textbf{A model} is a function $f$ mapping input $\vec{x}$ to output prediction $y$.\\
 \textbf{A model family} is a set of models that share the same structure but differ in parameters (e.g.\ layers in a neural network)\\
 \textbf{Accuracy} is calculated as follows:
-\[ \frac{\sum_{i=1}^N \mathbbm{1}\left[t^{(i)}=y^{(i)}\right]}{N} \]
+\[ \frac{\sum_{i=1}^N \ind\left[t^{(i)}=y^{(i)}\right]}{N} \]
 A \textbf{parameter} is the internal variables of a model learned from data whilst training.\\
 A \textbf{hyperparameter} are the settings chosen before training that controls how the learning process works.\\
 Training vs.\ validation vs.\ test\\
@@ -187,7 +187,7 @@ Prediction is:
 \[ y = \begin{cases} 1 & z\ge 0\\ 0 & z<0 \end{cases} \]
 For which the loss functions are:
 \begin{itemize}
-  \item Zero-One Loss: $L_{0-1}(y,t) = \mathbbm{1}[y\ne t]$
+  \item Zero-One Loss: $L_{0-1}(y,t) = \ind[y\ne t]$
   \begin{itemize}
     \item Non-differentiable / zero gradients (cannot update weights).
   \end{itemize}
