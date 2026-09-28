@@ -1,0 +1,241 @@
+\documentclass[10pt]{article}
+\usepackage[letterpaper,margin=0.2in]{geometry}
+\usepackage{amsmath,amssymb,bm}
+\newcommand{\ind}{\mathbb{I}}
+\usepackage{multicol}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{titlesec}
+
+\setlength{\parindent}{0pt}
+\setlength{\columnsep}{8pt}
+\setlength{\columnseprule}{0.2pt}
+\setlist{nosep,leftmargin=*}
+\titleformat*{\section}{\large\bfseries}
+\titleformat*{\subsection}{\normalsize\bfseries}
+\titlespacing*{\section}{0pt}{3pt}{1pt}
+\titlespacing*{\subsection}{0pt}{2pt}{0pt}
+\AtBeginDocument{\setlength{\abovedisplayskip}{2pt}\setlength{\belowdisplayskip}{2pt}\setlength{\abovedisplayshortskip}{0pt}\setlength{\belowdisplayshortskip}{1pt}}
+\setlength{\jot}{1pt}
+\pagestyle{empty}
+
+\newcommand{\vx}{\mathbf{x}}
+\newcommand{\vw}{\mathbf{w}}
+\newcommand{\vt}{\mathbf{t}}
+\newcommand{\vu}{\mathbf{u}}
+\newcommand{\vv}{\mathbf{v}}
+\newcommand{\vr}{\mathbf{r}}
+\newcommand{\cE}{\mathcal{E}}
+\newcommand{\cL}{\mathcal{L}}
+
+\begin{document}
+\begin{multicols*}{3}
+
+\section{KNN}
+\subsection{The Very Basics}
+\textbf{Learning}: find a model $f$ that maps from inputs to outputs given a labeled training dataset.\\
+\textbf{Inference}: use a model $f$ to predict an output $y$ given a new example $\vec{x}$\\
+\textbf{A model} is a function $f$ mapping input $\vec{x}$ to output prediction $y$.\\
+\textbf{A model family} is a set of models that share the same structure but differ in parameters (e.g.\ layers in a neural network)\\
+\textbf{Accuracy} is calculated as follows:
+\[ \frac{\sum_{i=1}^N \ind\left[t^{(i)}=y^{(i)}\right]}{N} \]
+A \textbf{parameter} is the internal variables of a model learned from data whilst training.\\
+A \textbf{hyperparameter} are the settings chosen before training that controls how the learning process works.\\
+Training vs.\ validation vs.\ test\\
+\textbf{Parametric models} fix the parameter count. Non-parametric models don't. $\mathcal{O}(1)$ space complexity with respect to the feature count, and never $\Omega(N)$. Hyperparameters are out of this scope.
+
+\subsection{KNN}
+For 1NN: Find $t^{(c)}$ that corresponds to:
+\[ \vec{x}^{(c)} = \arg\min_{\vec{x}^{(i)}\in\text{training set}} \operatorname{distance}\left(\vec{x}^{(i)},\, \vec{x}\right) \]
+For kNN, for the top $k$ other datapoints closest to $\vx$, choose the majority class.\\
+Also good to normalize values:
+\[ x_{\text{norm}} = \frac{x-\mu}{\sigma} \]
+Advantages:
+\begin{itemize}
+  \item Simple
+  \item No training
+  \item Works for reg.\ and class.
+  \item Adapts easily to new data
+\end{itemize}
+Limits:
+\begin{itemize}
+  \item Bad w/ high dims
+  \item Sensitive to scaling. Though can be normalized
+  \item Slow for large datasets, time proportional to data
+  \item Must store logs, proportional to data
+\end{itemize}
+If $k$ is even, pick a tiebreaker. For this, you should make sure $k$ is odd.
+
+\section{Decision Trees}
+Large trees overfit, small trees underfit. For inference, trace the tree.\\
+\textbf{Entropy}
+\[ H(X) = -\textstyle\sum_{x\in X} p(x)\log_2 p(x) \]
+\textbf{Conditional Entropy}
+\begin{align*}
+&H(X\mid Y=y)\\
+&= -\sum_{x\in X} p(x\mid Y=y)\log_2 p(x\mid Y=y)
+\end{align*}
+\textbf{Expected conditional entropy}
+\begin{align*}
+&H(X\mid Y)\\
+&= -\sum_{y\in Y} p(y)\sum_{x\in X} p(x\mid y)\log_2 p(x\mid y)
+\end{align*}
+\textbf{Information gain}
+\[ IG(X\mid Y) = H(X) - H(X\mid Y) \]
+\textbf{Properties}
+\begin{itemize}
+  \item Entropy nonnegative
+  \item $H(Y\mid X) \le H(Y)$
+  \item $Y, X$ are independent $\Rightarrow IG(Y\mid X) = 0$
+  \item Full determinant rids it
+\end{itemize}
+
+\subsection{Decision Tree Algorithm}
+Keep splitting until:
+\begin{itemize}
+  \item All examples have the same label.
+  \item When there are no features left.
+  \item When a depth limit is reached. (hyperparameter)
+  \item When the loss stops decreasing enough. (hyperparameter)
+\end{itemize}
+
+\section{Linear / GD}
+Loss function measures how off once training example is.\\
+Cost functions sum up all.
+\[ \cL(y,t) = \tfrac{1}{2}(y-t)^2 \]
+\[ \cE(\vw) = \tfrac{1}{N}\textstyle\sum_{i=1}^N \cL\left(y^{(i)}, t^{(i)}\right) \]
+For the linear model $\mathbf{y} = W\vx$, the \textbf{cost} function is:
+\begin{align*}
+\cE(\vw) &= \frac{1}{2N}\sum_{i=1}^N\left(\vw^T\vx - t^{(i)}\right)^2\\
+\cE(\vw) &= \frac{1}{2N}(X\vw-\vt)^T(X\vw-\vt)
+\end{align*}
+
+\subsection{Gradient of the Cost Function}
+\begin{align*}
+\frac{\partial\cE}{\partial w_j} &= \frac{1}{N}\sum_{i=1}^N\left(\vw^T\vx^{(i)} - t^{(i)}\right)x_j^{(i)}\\
+\nabla_{\vw}\cE(\vw) &= \frac{1}{N}\sum_{i=1}^N\left(\vw^T\vx^{(i)} - t^{(i)}\right)\vx^{(i)}\\
+\nabla_{\vw}\cE(\vw) &= \frac{1}{N}X^T(X\vw-\vt)
+\end{align*}
+The regularizer:
+\[ \tfrac{\lambda}{2}\textstyle\sum_{j=0}^D w_j^2 \]
+The gradient of the regularizer:
+\begin{gather*}
+\frac{\partial}{\partial w_j}\left(\frac{\lambda}{2}\sum_{j=0}^D w_j^2\right) = \lambda w_j\\
+\nabla_{\vw}\left(\frac{\lambda}{2}\vw^T\vw\right) = \lambda\vw
+\end{gather*}
+In the event the bias term is left in:
+\begin{align*}
+\cE(\vw) &= \frac{1}{2N}(X\vw+b-\vt)^T(X\vw+b-\vt)\\
+\nabla_{\vw}\cE(\vw) &= \frac{1}{N}X^T(X\vw+b-\vt)\\
+\frac{\partial\cE(\vw)}{\partial w_j} &= \frac{1}{N}\sum_{i=1}^N\left(\vw^T\vx^{(i)}+b-t^{(i)}\right)x_j^{(i)}\\
+\frac{\partial\cE(\vw)}{\partial b} &= \frac{1}{N}(X\vw+b-\vt)
+\end{align*}
+
+\subsection{Stochastic GD}
+Batch GD is what GD normally does. It can be slow.\\
+Stochastic GD just randomly picks a training example. It can be very noisy. Where $i$ at random,
+\[ \vw \leftarrow \vw - \alpha\tfrac{\partial\cL}{\partial\vw} \]
+Mini-batch GD falls in-between.\\
+Batch size can be tuned as a hyperparameter
+
+\subsection{Vectorizing Tips}
+Where $X$ is $N\times D$ and all other variables can have their shape inferred:\\
+\textbf{Dot product}
+\[ \textstyle\sum_{i=1}^N u_i v_i = \vu^T\vv \]
+\textbf{Hadamard product}
+\[ \vu\odot\vv = \operatorname{diag}(\vu)\,\vv = \left(\vu^T\operatorname{diag}(\vv)\right)^T \]
+\textbf{Sum a vector}
+\[ \vu^T\mathbf{1} = \textstyle\sum_{i=1}^N u_i \]
+\textbf{Summing a matrix on axis 1} -- horizontal squish $>\!-\!<$ (shape $N$)
+\[ X\mathbf{1} \]
+\textbf{Summing a matrix on axis 0} -- vertical squish $\downarrow$ (shape $D$)
+\[ \mathbf{1}^T X \]
+\textit{This is a column vector, and you may need to transpose it.}\\
+\textbf{Row-wise multiplication}
+\[ \operatorname{diag}(\vu)X = \begin{bmatrix} - & \vx^{(1)}u^{(1)} & - \\ - & \vx^{(i)}u^{(i)} & - \\ - & \vx^{(N)}u^{(N)} & - \end{bmatrix} \]
+\textbf{Column-wise multiplication}
+\[ X\cdot\operatorname{diag}(\vv) = \begin{bmatrix} | & | & | \\ \vx_1 v_1 & \vx_2 v_2 & \vx_3 v_3 \\ | & | & | \end{bmatrix} \]
+\textbf{Tip:} in a chain of matrix multiplications, the \textbf{height} of the leftmost matrix will be the height of the output. E.g.\ for $X^T\vr$, output is $D\times 1$.
+\[ \textstyle\sum_{i=1}^N r^{(i)}\vx^{(i)} = X^T\vr \]
+\textbf{Shape reasoning:} the summed index ($N$) must become the \emph{inner} dimension and cancel; the dimension that appears first in the result goes on the left.\\
+\textbf{Stack predictions:} $(X\vw)_i = \vw^T\vx^{(i)}$, so $X\vw\in\mathbb{R}^{N\times 1}$ stacks all predictions.\\
+\textbf{Scalar with vector} ($s\in\mathbb{R}$)
+\begin{gather*} \alpha_i = u_i + s \Rightarrow \boldsymbol{\alpha} = \vu + s\mathbf{1}\\ \beta_i = s u_i \Rightarrow \boldsymbol{\beta} = s\vu \end{gather*}
+\textbf{Outer product}
+\[ M_{ij} = u_i v_j \Rightarrow M = \vu\vv^T \quad (P\times Q) \]
+Inner product $\to$ scalar; element-wise $\to$ vector; outer $\to$ matrix.\\
+\textbf{Weighted sum of vectors} ($M$ rows $\mathbf{m}_i^T$ vs.\ columns $\mathbf{m}_j$)
+\begin{gather*} \textstyle\sum_i u_i\mathbf{m}_i = M^T\vu \ (\text{rows})\\ \textstyle\sum_j u_j\mathbf{m}_j = M\vu \ (\text{cols}) \end{gather*}
+\textbf{Stack of dot products} ($M$ rows $\mathbf{m}_i^T$)
+\[ \alpha_i = \mathbf{m}_i^T\vu \Rightarrow \boldsymbol{\alpha} = M\vu \]
+\textbf{Two weights per term}
+\[ \textstyle\sum_i u_i v_i\mathbf{m}_i = M^T(\vu\odot\vv) = M^T\operatorname{diag}(\vu)\vv \]
+\textbf{Double sums}
+\begin{gather*}
+\textstyle\sum_i\sum_j u_i v_j m_{ij} = \vu^T M\vv\\ \textstyle\sum_i\sum_j u_i v_j m_{ij}^2 = \vu^T(M\odot M)\vv\\
+\textstyle\sum_i\sum_k u_i m_{ik} u_k = \vu^T M\vu
+\end{gather*}
+\textbf{Pitfall:} $\mathbf{a}\odot\mathbf{b} \ne \mathbf{a}\operatorname{diag}(\mathbf{b})$ --- $(P\times 1)(P\times P)$ is undefined; use $\operatorname{diag}(\mathbf{b})\mathbf{a}$.\\
+\textbf{Pitfall:} $\frac1N(X\vw-\vt)^T X$ is a $1\times(D+1)$ \emph{row} vector; the gradient must be a column $\Rightarrow \frac1N X^T(X\vw-\vt)$.\\
+\textbf{Variants of LR gradient} ($\vr = X\vw-\vt$)
+\begin{itemize}
+  \item Per-weight $\lambda_j$: $\frac1N X^T\vr + \boldsymbol{\lambda}\odot\vw = \frac1N X^T\vr + \operatorname{diag}(\boldsymbol{\lambda})\vw$
+  \item Per-example weight $\alpha_i$: $\sum_i \alpha_i r^{(i)}\vx^{(i)} = X^T\operatorname{diag}(\mathbf{a})\vr$
+  \item Per-feature scale $\alpha_j$: predictions $X\operatorname{diag}(\boldsymbol{\alpha})\vw$, gradient gains a $\operatorname{diag}(\boldsymbol{\alpha})$ on the left: $\frac1N\operatorname{diag}(\boldsymbol{\alpha})X^T\vr'$, $\vr' = X\operatorname{diag}(\boldsymbol{\alpha})\vw-\vt$
+\end{itemize}
+\textbf{Absorb bias:} $\vw_1^T\vx_1 + b = \vw_2^T\vx_2$ with $\vw_2 = \begin{bmatrix} b\\ \vw_1\end{bmatrix}$, $\vx_2 = \begin{bmatrix} 1\\ \vx_1\end{bmatrix}$ (both $(D+1)\times 1$).
+
+\section{Logistic Regression}
+Linear model is:
+\[ z = \vw^T\vx \]
+Prediction is:
+\[ y = \begin{cases} 1 & z\ge 0\\ 0 & z<0 \end{cases} \]
+For which the loss functions are:
+\begin{itemize}
+  \item Zero-One Loss: $L_{0-1}(y,t) = \ind[y\ne t]$
+  \begin{itemize}
+    \item Non-differentiable / zero gradients (cannot update weights).
+  \end{itemize}
+  \item Squared Error Loss: $L_{SE}(z,t) = \frac{1}{2}(z-t)^2$
+  \begin{itemize}
+    \item Penalizes confident correct predictions.
+  \end{itemize}
+  \item Sigmoid + Squared Error:\\
+  $y = \sigma(z) = \frac{1}{1+e^{-z}}$, $L_{SE}(y,t) = \frac{1}{2}(y-t)^2$
+  \begin{itemize}
+    \item Suffers from vanishing gradients (when predictions are extremely wrong).
+  \end{itemize}
+  \item Cross entropy: $\begin{cases} -\log(y) & t=1\\ -\log(1-y) & t=0 \end{cases}$
+\end{itemize}
+Where cross entropy can be:
+\[ -t\log(y) - (1-t)\log(1-y) \]
+\includegraphics[width=0.45\linewidth]{ce_loss.png}
+
+\subsection{Cross-Entropy Loss Equations}
+\textbf{Linear model}
+\[ z = \vw^T\vx \]
+\textbf{Classification}
+\begin{align*}
+y &= \sigma(z) = \frac{1}{1+e^{-z}}\\
+\sigma'(z) &= \sigma(z)\left(1-\sigma(z)\right)\\
+\frac{\partial y}{\partial z} &= y(1-y)
+\end{align*}
+\textbf{Loss}
+\[ \cL_{CE}(y,t) = -t\log(y) - (1-t)\log(1-y) \]
+\textbf{Gradient Descent Update}\\
+Where $\cE(\vw) = \frac{1}{N}\sum_{i=1}^N \cL_{CE}\left(y^{(i)}, t^{(i)}\right)$
+\begin{align*}
+\frac{\partial\cL_{CE}}{\partial w_j} &= \frac{\partial\cL_{CE}}{\partial y}\cdot\frac{\partial y}{\partial z}\cdot\frac{\partial z}{\partial w_j}\\
+&= \left(-\frac{t}{y} + \frac{1-t}{1-y}\right)\cdot y(1-y)\cdot x_j\\
+&= (y-t)x_j
+\end{align*}
+\textit{Tip: re-use variables, don't sub all!}\\
+The gradient descent update for logistic regression is:
+\begin{align*}
+w_j &\leftarrow w_j - \alpha\frac{\partial\cE}{\partial w_j}\\
+&= w_j - \frac{\alpha}{N}\sum_{i=1}^N\left(y^{(i)} - t^{(i)}\right)x_j^{(i)}
+\end{align*}
+\[ \vw \leftarrow \vw - \tfrac{\alpha}{N}X^T(X\vw-\vt) \]
+
+\end{multicols*}
+\end{document}
