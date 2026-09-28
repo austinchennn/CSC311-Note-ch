@@ -1,5 +1,5 @@
 \documentclass[10pt]{article}
-\usepackage[letterpaper,margin=0.35in]{geometry}
+\usepackage[letterpaper,margin=0.2in]{geometry}
 \usepackage{amsmath,amssymb,bm}
 \newcommand{\ind}{\mathbb{I}}
 \usepackage{multicol}
@@ -8,10 +8,15 @@
 \usepackage{titlesec}
 
 \setlength{\parindent}{0pt}
-\setlength{\columnsep}{12pt}
+\setlength{\columnsep}{8pt}
+\setlength{\columnseprule}{0.2pt}
 \setlist{nosep,leftmargin=*}
-\titlespacing*{\section}{0pt}{6pt}{3pt}
-\titlespacing*{\subsection}{0pt}{4pt}{2pt}
+\titleformat*{\section}{\large\bfseries}
+\titleformat*{\subsection}{\normalsize\bfseries}
+\titlespacing*{\section}{0pt}{3pt}{1pt}
+\titlespacing*{\subsection}{0pt}{2pt}{0pt}
+\AtBeginDocument{\setlength{\abovedisplayskip}{2pt}\setlength{\belowdisplayskip}{2pt}\setlength{\abovedisplayshortskip}{0pt}\setlength{\belowdisplayshortskip}{1pt}}
+\setlength{\jot}{1pt}
 \pagestyle{empty}
 
 \newcommand{\vx}{\mathbf{x}}
