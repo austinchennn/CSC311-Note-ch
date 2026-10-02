@@ -16,6 +16,18 @@ $\mathbb{R}^d$ 中形如 $H=\{\mathbf{x}:\mathbf{a}^\top\mathbf{x}+b\geq0\}$ 的
 
 集合 $S$ 中任取两点 $\mathbf{x}^{(a)},\mathbf{x}^{(b)}$ ，连接它们的线段（即所有 $\lambda\mathbf{x}^{(a)}+(1-\lambda)\mathbf{x}^{(b)}$ ， $\lambda\in[0,1]$ ）也完全落在 $S$ 内。
 
+> 补充（非原文）：为什么 $\lambda\mathbf{x}^{(a)}+(1-\lambda)\mathbf{x}^{(b)}$ 恰好表示连接 $\mathbf{x}^{(a)}$ 和 $\mathbf{x}^{(b)}$ 的直线段？把公式展开并重新提取公因式，可写成
+>
+> $$
+> \mathbf{x}^{(b)}+\lambda\big(\mathbf{x}^{(a)}-\mathbf{x}^{(b)}\big)
+> $$
+>
+> 在这个形式下几何意义很清晰：
+>
+> - $\mathbf{x}^{(b)}$ ：线段的起点位置。
+> - $\mathbf{x}^{(a)}-\mathbf{x}^{(b)}$ ：从 $\mathbf{x}^{(b)}$ 指向 $\mathbf{x}^{(a)}$ 的方向向量。
+> - $\lambda$ ：控制沿这个方向向量移动多远的比例参数。 $\lambda=0$ 时在起点 $\mathbf{x}^{(b)}$ ， $\lambda=1$ 时到达 $\mathbf{x}^{(a)}$ ， $\lambda\in[0,1]$ 扫过两点之间的整条线段。
+
 ## 二、定理与证明：XOR 问题线性不可分
 
 **问题设定**：XOR（异或）函数在恰好一个输入为 1 时输出 1，否则输出 0，对应 4 个数据点 $(0,0)\to0$ 、 $(0,1)\to1$ 、 $(1,0)\to1$ 、 $(1,1)\to0$ 。**命题**：不存在权重 $(b,w_1,w_2)$ 能让线性分类器 $f(\mathbf{x})=b+w_1x_1+w_2x_2$ （配合阈值 0）正确分类全部 4 个点。
