@@ -28,6 +28,32 @@ $\mathbb{R}^d$ 中形如 $H=\{\mathbf{x}:\mathbf{a}^\top\mathbf{x}+b\geq0\}$ 的
 > - $\mathbf{x}^{(a)}-\mathbf{x}^{(b)}$ ：从 $\mathbf{x}^{(b)}$ 指向 $\mathbf{x}^{(a)}$ 的方向向量。
 > - $\lambda$ ：控制沿这个方向向量移动多远的比例参数。 $\lambda=0$ 时在起点 $\mathbf{x}^{(b)}$ ， $\lambda=1$ 时到达 $\mathbf{x}^{(a)}$ ， $\lambda\in[0,1]$ 扫过两点之间的整条线段。
 
+#### 半空间是凸集 (a half-space is convex)
+
+**题目**：证明如下定义的半空间 $H$ 是凸的，其中 $\mathbf{a}\in\mathbb{R}^d$ 、 $b\in\mathbb{R}$ ：
+
+$$
+H=\{\mathbf{x}:\mathbf{a}^\top\mathbf{x}+b\geq0\}
+$$
+
+**证明**：任取两点 $\mathbf{x}^{(a)},\mathbf{x}^{(b)}\in H$ ，由 $H$ 的定义有
+
+$$
+\mathbf{a}^\top\mathbf{x}^{(a)}+b\geq0,\qquad\mathbf{a}^\top\mathbf{x}^{(b)}+b\geq0
+$$
+
+下面说明这两点的任意凸组合 (convex combination) 也落在这个半空间内。对任意 $\lambda\in[0,1]$ ，
+
+$$
+\begin{aligned}
+&\mathbf{a}^\top\big(\lambda\mathbf{x}^{(a)}+(1-\lambda)\mathbf{x}^{(b)}\big)+b\\
+&=\lambda\big(\mathbf{a}^\top\mathbf{x}^{(a)}+b\big)+(1-\lambda)\big(\mathbf{a}^\top\mathbf{x}^{(b)}+b\big)\geq0\\
+&\Rightarrow\lambda\mathbf{x}^{(a)}+(1-\lambda)\mathbf{x}^{(b)}\in H
+\end{aligned}
+$$
+
+> 补充（非原文）：等号成立是因为 $b=\lambda b+(1-\lambda)b$ ，可把 $b$ 拆进两个括号； $\geq0$ 成立是因为 $\lambda\geq0$ 、 $1-\lambda\geq0$ ，且两个括号都 $\geq0$ ，非负数的非负加权和仍非负。
+
 ## 二、定理与证明：XOR 问题线性不可分
 
 **问题设定**：XOR（异或）函数在恰好一个输入为 1 时输出 1，否则输出 0，对应 4 个数据点 $(0,0)\to0$ 、 $(0,1)\to1$ 、 $(1,0)\to1$ 、 $(1,1)\to0$ 。**命题**：不存在权重 $(b,w_1,w_2)$ 能让线性分类器 $f(\mathbf{x})=b+w_1x_1+w_2x_2$ （配合阈值 0）正确分类全部 4 个点。
