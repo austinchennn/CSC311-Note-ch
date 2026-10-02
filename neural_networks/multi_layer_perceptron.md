@@ -88,6 +88,10 @@ ReLU 语境下的死神经元问题：某单元对每个训练输入的预激活
 
 ### 1. 三层 MLP 的记号（原文表 1）
 
+![三层 MLP 示意图：输入层 3 个单元、两个隐藏层各 4 个单元、输出层 2 个单元](images/mlp_3layer.png)
+
+原文图 1（Example of a Multi-Layer Perceptron）：输入层 (input layer) $x_1,x_2,x_3$ → 隐藏层 1 (hidden layer 1) $h^{(1)}_1,\dots,h^{(1)}_4$ → 隐藏层 2 (hidden layer 2) $h^{(2)}_1,\dots,h^{(2)}_4$ → 输出层 (output layer) $y_1,y_2$ ；相邻两层之间全连接。第 3 节"三层 MLP 中的推理"以这张图为具体例子。
+
 上标 $^{(m)}$ 索引层：第 $0$ 层是输入层，第 $1$ 、 $2$ 层是隐藏层，第 $3$ 层是输出层。
 
 | 符号 | 说明 |
@@ -281,7 +285,7 @@ softmax 不是逐元素施加的：每个输出 $y_j$ 依赖整个向量 $\mathb
 
 ## 六、例子（精简保留）
 
-- **示意三层 MLP（图 1）**： $D^{(0)}=3$ 个输入单元、两个隐藏层各 $4$ 个单元（ $D^{(1)}=D^{(2)}=4$ ）、 $D^{(3)}=2$ 个输出单元；权重矩阵 $\mathbf{W}^{(1)}\in\mathbb{R}^{4\times3}$ 、 $\mathbf{W}^{(2)}\in\mathbb{R}^{4\times4}$ 、 $\mathbf{W}^{(3)}\in\mathbb{R}^{2\times4}$ ； $\mathbf{x}$ 有 3 个元素，故 $\mathbf{z}^{(1)}$ 有 4 个元素；若是两类分类， $f^{(3)}$ 可取 softmax 把 2 个输出变成概率分布。
+- **示意三层 MLP（图 1，图见第二节第 1 条）**： $D^{(0)}=3$ 个输入单元、两个隐藏层各 $4$ 个单元（ $D^{(1)}=D^{(2)}=4$ ）、 $D^{(3)}=2$ 个输出单元；权重矩阵 $\mathbf{W}^{(1)}\in\mathbb{R}^{4\times3}$ 、 $\mathbf{W}^{(2)}\in\mathbb{R}^{4\times4}$ 、 $\mathbf{W}^{(3)}\in\mathbb{R}^{2\times4}$ ； $\mathbf{x}$ 有 3 个元素，故 $\mathbf{z}^{(1)}$ 有 4 个元素；若是两类分类， $f^{(3)}$ 可取 softmax 把 2 个输出变成概率分布。
 - **小型前馈网络（图 2，A small feedforward network）**： $A$ 、 $B$ 是输入单元， $C$ 、 $D$ 、 $E$ 是神经元， $E$ 产生网络的输出。
 
   ```mermaid
