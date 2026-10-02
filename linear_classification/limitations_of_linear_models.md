@@ -222,6 +222,21 @@ $$
 
 线性模型的这一结构性限制，恰好是引出**神经网络 (neural networks)** 的动机：与其手工设计特征映射，不如让模型直接从数据中**学习**非线性表示。可以这样理解神经网络的结构——它的最后一步仍然是一个线性模型，只是输入的特征 $\phi(\mathbf{x})$ 不再是手工设定的，而是由前面的隐藏层自动学出来的。
 
+### 从架构分工理解"最后一步是线性模型"
+
+> 说明：这一小节是对原文图 9（图注：An opaque learned transformation (hidden layers) maps the input $\mathbf{x}$ to learned features $\phi(\mathbf{x})$, followed by a linear classifier $\mathbf{w}^\top\phi(\mathbf{x})+b$ ）的理解性展开，非原文逐句内容。
+
+- **前端（隐藏层）：负责特征转换**
+  - 图中黑色的"Hidden layers"代表一个学习得到的变换 (learned transformation)，把原始输入 $\mathbf{x}$ 映射为新的特征 $\phi(\mathbf{x})$ 。
+  - 与之前手工构造特征映射 (hand-crafting feature maps) 不同，神经网络直接从数据中学习，自动构建非线性表示。
+  - 这一步的核心目的：把原本线性不可分的数据转换到一个新的特征空间中，使其变得线性可分。
+- **末端（输出层）：负责线性分类**
+  - 隐藏层输出"学习到的特征 (learned features)"之后，最后连接的蓝框部分就是一个标准的线性分类器 (linear classifier)。
+- **数学本质**
+  - 最后一步的公式是 $\mathbf{w}^\top\phi(\mathbf{x})+b$ ，其中 $\mathbf{w}$ 是权重向量、 $b$ 是偏置， $\mathbf{w}$ 与 $\phi(\mathbf{x})$ 同维。它与基础线性模型 $\mathbf{w}^\top\mathbf{x}+b$ 的形式完全一致。
+  - 根本区别：这个线性分类器处理的不再是原始特征 $\mathbf{x}$ ，而是经过隐藏层学习、提取出来的特征 $\phi(\mathbf{x})$ 。
+- **与第三节 XOR 例子的对应**：那里的 $\phi(\mathbf{x})=(x_1,x_2,x_1x_2)$ 是手工设计的；神经网络做的是同一件事，只是 $\phi$ 由隐藏层学出来。
+
 ## 五、例子（精简保留）
 
 - **XOR 扩展特征（ $x_3=x_1x_2$ ）**：完整过程见第三节的例子。取 $b=-0.5,w_1=1,w_2=1,w_3=-2$ 时 $f$ 在四点上依次为 $-0.5,0.5,0.5,-0.5$ ，全部正确；原始空间的边界是两条直线 $x_1=0.5$ 、 $x_2=0.5$ 。取 $w_3=-3$ 时同样正确，边界是双曲线 $x_1+x_2-3x_1x_2-0.5=0$ 。
