@@ -41,13 +41,24 @@
 \[ \frac{\sum_{i=1}^N \ind\left[t^{(i)}=y^{(i)}\right]}{N} \]
 A \textbf{parameter} is the internal variables of a model learned from data whilst training.\\
 A \textbf{hyperparameter} are the settings chosen before training that controls how the learning process works.\\
-Training vs.\ validation vs.\ test\\
+\textbf{Train} fit params; \textbf{Val} tune hyperparams / pick model; \textbf{Test} use once $\to$ unbiased gen.\ error (tune on test $\to$ leakage, optimistic).\\
+Reg.\ vs class.\ decided by \emph{output} only (cont.\ vs discrete). $t$=target, $y$=pred; $x^{(i)}_j$: ex.\ $i$, feat.\ $j$.\\
+100\% train acc $\not\Rightarrow$ good test; may overfit. Data augmentation: label-preserving transforms (shift/rotate).\\
 \textbf{Parametric models} fix the parameter count. Non-parametric models don't. $\mathcal{O}(1)$ space complexity with respect to the feature count, and never $\Omega(N)$. Hyperparameters are out of this scope.
 
 \subsection{KNN}
 For 1NN: Find $t^{(c)}$ that corresponds to:
 \[ \vec{x}^{(c)} = \arg\min_{\vec{x}^{(i)}\in\text{training set}} \operatorname{distance}\left(\vec{x}^{(i)},\, \vec{x}\right) \]
 For kNN, for the top $k$ other datapoints closest to $\vx$, choose the majority class.\\
+{\scriptsize Distances ($\mathbf a,\mathbf b\in\mathbb R^d$):\\
+\begin{minipage}[t]{0.5\linewidth}
+$L_2$: $\sqrt{\sum_j (a_j-b_j)^2}$\\[1pt]
+$L_p$: $\big(\sum_j |a_j-b_j|^p\big)^{1/p}$
+\end{minipage}\vrule\hspace{2pt}
+\begin{minipage}[t]{0.47\linewidth}
+Cos: $\frac{\mathbf a\cdot\mathbf b}{\|\mathbf a\|_2\|\mathbf b\|_2}$\\[1pt]
+$L_\infty$: $\max_j |a_j-b_j|$
+\end{minipage}}\\
 Also good to normalize values:
 \[ x_{\text{norm}} = \frac{x-\mu}{\sigma} \]
 Advantages:
@@ -59,12 +70,15 @@ Advantages:
 \end{itemize}
 Limits:
 \begin{itemize}
-  \item Bad w/ high dims
+  \item Bad w/ high dims. \textbf{Curse of dimensionality}: in high dims most points are far apart from each other ($L_\infty$: fraction of $[0,1]^d$ within $\epsilon$ of origin $=\epsilon^d$)
   \item Sensitive to scaling. Though can be normalized
   \item Slow for large datasets, time proportional to data
   \item Must store logs, proportional to data
 \end{itemize}
-If $k$ is even, pick a tiebreaker. For this, you should make sure $k$ is odd.
+If $k$ is even, pick a tiebreaker. For this, you should make sure $k$ is odd.\\
+$k\uparrow\ \to$ boundary smoother, less sensitive to individual pts $\to$ underfit; $k=N\to$ always majority class.\\
+$k=1\to$ jagged, overfit; 100\% train acc (unless dup.\ $\vx$ w/ diff.\ labels). Pick $k$ on val set.\\
+Cos: direction $>$ magnitude (text). Curse: need exp.\ more data; nearest $\approx$ farthest dist.; large $k$ doesn't fix.
 
 \section{Decision Trees}
 Large trees overfit, small trees underfit. For inference, trace the tree.\\
@@ -88,6 +102,7 @@ Large trees overfit, small trees underfit. For inference, trace the tree.\\
   \item $H(Y\mid X) \le H(Y)$
   \item $Y, X$ are independent $\Rightarrow IG(Y\mid X) = 0$
   \item Full determinant rids it
+  \item $IG\ge0$; certain $\to H=0$; binary max $H=1$ bit at $p=.5$
 \end{itemize}
 
 \subsection{Decision Tree Algorithm}
@@ -97,10 +112,18 @@ Keep splitting until:
   \item When there are no features left.
   \item When a depth limit is reached. (hyperparameter)
   \item When the loss stops decreasing enough. (hyperparameter)
+  \item Node has $<$ min \#samples. (hyperparameter)
 \end{itemize}
+Split: pick max IG (not train error: ignores child uncertainty). Leaf $\to$ majority class.
+Greedy $\to$ not globally optimal (NP-hard). Boundaries axis-aligned ($x_j\le\theta$). Continuous feat.: only $\le N\!-\!1$ thresholds (midpts between sorted values). Scale-invariant.
 
 \section{Linear / GD}
 Loss function measures how off once training example is.\\
+Pred.: $y=\vw^T\vx+b$, $\mathbf y=X\vw$ ($X$: $N\times(D\!+\!1)$, row = example).\\
+\textbf{Closed form}: $\nabla=0\Rightarrow X^TX\vw=X^T\vt\Rightarrow\vw=(X^TX)^{-1}X^T\vt$.\\
+$\nabla$ = steepest ascent, $\perp$ contours $\to$ step along $-\nabla$. $\alpha$ too big $\to$ overshoot/diverge; too small $\to$ slow.\\
+Feature map $\psi(\vx)$ (e.g.\ $[1,x,x^2]$) $\to$ nonlinear fit, still linear in $\vw$.\\
+Reg.\ $\cE+\lambda\mathcal R$: $\lambda$ small $\to$ overfit; big $\to$ underfit.\\
 Cost functions sum up all.
 \[ \cL(y,t) = \tfrac{1}{2}(y-t)^2 \]
 \[ \cE(\vw) = \tfrac{1}{N}\textstyle\sum_{i=1}^N \cL\left(y^{(i)}, t^{(i)}\right) \]
@@ -136,7 +159,9 @@ Batch GD is what GD normally does. It can be slow.\\
 Stochastic GD just randomly picks a training example. It can be very noisy. Where $i$ at random,
 \[ \vw \leftarrow \vw - \alpha\tfrac{\partial\cL}{\partial\vw} \]
 Mini-batch GD falls in-between.\\
-Batch size can be tuned as a hyperparameter
+Batch size can be tuned as a hyperparameter\\
+Mini-batch grad = unbiased est.; SGD noise $\to$ escape plateaus (no global-opt guarantee).
+Ravine: very diff.\ grad magnitudes per dim $\to$ oscillate; fix: normalize features.
 
 \subsection{Vectorizing Tips}
 Where $X$ is $N\times D$ and all other variables can have their shape inferred:\\
@@ -186,6 +211,8 @@ Inner product $\to$ scalar; element-wise $\to$ vector; outer $\to$ matrix.\\
 \textbf{Absorb bias:} $\vw_1^T\vx_1 + b = \vw_2^T\vx_2$ with $\vw_2 = \begin{bmatrix} b\\ \vw_1\end{bmatrix}$, $\vx_2 = \begin{bmatrix} 1\\ \vx_1\end{bmatrix}$ (both $(D+1)\times 1$).
 
 \section{Logistic Regression}
+$y=\sigma(\vw^T\vx)=p(t=1\mid\vx)$, threshold $0.5$. vs kNN: fixed $\vw$ $\to$ fast $O(D)$ pred.\\
+\textbf{Softmax} ($K$ classes): $y_k=\frac{e^{z_k}}{\sum_{k'}e^{z_{k'}}}$ (prob.\ dist.), target one-hot $\vt\in\{0,1\}^K$, $\cL=-\sum_k t_k\log y_k$. Boundary $i/j$: $z_i=z_j$ (hyperplane); $K(K\!-\!1)/2$ pairs.\\
 Linear model is:
 \[ z = \vw^T\vx \]
 Prediction is:
