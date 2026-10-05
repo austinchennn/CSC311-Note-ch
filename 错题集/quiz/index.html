@@ -76,7 +76,7 @@ h1 span{color:var(--accent)}
   </div>
   <div class="bar"><i id="prog" style="width:0"></i></div>
   <section class="card" id="card" aria-live="polite"></section>
-  <p class="hint">键盘：1–4 选择 · Enter 提交 / 下一题 · 答错的题会在几题之后再出现，直到答对为止</p>
+  <p class="hint">键盘：1–4 选择 · Enter 提交 / 下一题 · 答错的题会在几题之后再出现，直到答对为止 · 进度自动保存，切换模式、周次或刷新都能接着刷</p>
 </div>
 
 <script>
@@ -86,7 +86,9 @@ const TYPE={mc:"单选",tf:"判断",ma:"多选"};
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 let hist=store.get("csc311-hist",{}); // id -> {seen, wrong, streak}
 let weeks=new Set(store.get("csc311-weeks",[1,2,3,4]));
-let mode="all", queue=[], cur=null, picked=new Set(), answered=false, total=0, doneCount=0, again=new Set();
+// Each mode keeps its own round (remaining queue, ids answered right, ids missed), so switching mode, weeks or reloading resumes it
+let rounds=store.get("csc311-rounds",{}); // mode -> {queue, done, again}
+let mode="all", R=null, cur=null, picked=new Set(), answered=false;
 Q.forEach((q,i)=>q.id=i);
 
 function renderMath(el){if(window.renderMathInElement)renderMathInElement(el,{delimiters:[{left:"$",right:"$",display:false},{left:"\\(",right:"\\)",display:false}],throwOnError:false})}
@@ -96,32 +98,44 @@ function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;")}
 function buildWeeks(){
   const box=document.getElementById("weeks");box.innerHTML="";
   [1,2,3,4].forEach(w=>{const b=document.createElement("button");b.className="chip";b.textContent="Week "+w;b.setAttribute("aria-pressed",weeks.has(w));
-    b.onclick=()=>{weeks.has(w)?weeks.delete(w):weeks.add(w);if(!weeks.size)weeks.add(w);store.set("csc311-weeks",[...weeks]);buildWeeks();start()};box.appendChild(b)});
+    b.onclick=()=>{weeks.has(w)?weeks.delete(w):weeks.add(w);if(!weeks.size)weeks.add(w);store.set("csc311-weeks",[...weeks]);buildWeeks();resume()};box.appendChild(b)});
 }
-function setMode(m){mode=m;document.getElementById("m-all").setAttribute("aria-pressed",m==="all");document.getElementById("m-weak").setAttribute("aria-pressed",m==="weak");start()}
+function setMode(m){mode=m;document.getElementById("m-all").setAttribute("aria-pressed",m==="all");document.getElementById("m-weak").setAttribute("aria-pressed",m==="weak");resume()}
 document.getElementById("m-all").onclick=()=>setMode("all");
 document.getElementById("m-weak").onclick=()=>setMode("weak");
 
-function start(){
-  let pool=Q.filter(q=>weeks.has(q.w));
-  if(mode==="weak")pool=pool.filter(q=>(hist[q.id]?.wrong||0)>0&&(hist[q.id]?.streak||0)<2);
-  queue=shuffle(pool.map(q=>q.id));total=queue.length;doneCount=0;again.clear();next();
+function isWeak(id){return (hist[id]?.wrong||0)>0&&(hist[id]?.streak||0)<2}
+function pool(){return Q.filter(q=>weeks.has(q.w)&&(mode==="all"||isWeak(q.id))).map(q=>q.id)}
+function saveRounds(){store.set("csc311-rounds",rounds)}
+// Resume this mode's round: drop queued ids now out of scope, slot in ids newly in scope that this round hasn't got right yet
+function resume(){
+  const p=pool(), inPool=new Set(p);
+  R=rounds[mode]||(rounds[mode]={queue:[],done:[],again:[]});
+  R.done=R.done.filter(id=>Q[id]);
+  R.queue=R.queue.filter(id=>inPool.has(id));
+  const skip=new Set([...R.done,...R.queue]);
+  shuffle(p.filter(id=>!skip.has(id))).forEach(id=>R.queue.splice(1+Math.random()*R.queue.length|0,0,id));
+  saveRounds();next();
 }
+function restart(){rounds[mode]={queue:[],done:[],again:[]};resume()}
+function roundDone(){return R.done.filter(id=>weeks.has(Q[id].w)).length}
 function stats(){
-  const seen=Object.keys(hist).length, weak=Q.filter(q=>(hist[q.id]?.wrong||0)>0&&(hist[q.id]?.streak||0)<2).length;
+  const seen=Object.keys(hist).length, weak=Q.filter(q=>isWeak(q.id)).length;
   document.getElementById("stats").textContent=`已做 ${seen}/${Q.length} · 待巩固 ${weak}`;
-  document.getElementById("prog").style.width=(total?doneCount/total*100:0)+"%";
+  const d=roundDone(), total=d+R.queue.length;
+  document.getElementById("prog").style.width=(total?d/total*100:0)+"%";
 }
 function next(){
   stats();const card=document.getElementById("card");
-  if(!queue.length){
+  if(!R.queue.length){
+    const total=roundDone();
     card.innerHTML=total?`<div class="done"><div class="big">${total}/${total}</div><div>这一轮全部答对了。</div><button class="btn" id="again">再来一轮</button></div>`
       :`<div class="done"><div class="big">0</div><div>当前选择下没有错题。切回“全部乱序”刷新题吧。</div><button class="btn" id="again">全部乱序</button></div>`;
-    document.getElementById("again").onclick=()=>total?start():setMode("all");cur=null;return;
+    document.getElementById("again").onclick=()=>total?restart():setMode("all");cur=null;return;
   }
-  cur=Q[queue[0]];picked=new Set();answered=false;
+  cur=Q[R.queue[0]];picked=new Set();answered=false;
   const h=hist[cur.id];
-  card.innerHTML=`<div class="meta"><span class="tag">W${cur.w}</span><span class="tag">${TYPE[cur.type]}</span>${again.has(cur.id)?'<span class="tag again">再来一次</span>':""}${h?`<span>做过 ${h.seen} 次 · 错 ${h.wrong} 次</span>`:""}</div>
+  card.innerHTML=`<div class="meta"><span class="tag">W${cur.w}</span><span class="tag">${TYPE[cur.type]}</span>${R.again.includes(cur.id)?'<span class="tag again">再来一次</span>':""}${h?`<span>做过 ${h.seen} 次 · 错 ${h.wrong} 次</span>`:""}</div>
   <div class="q">${esc(cur.q)}</div>
   <div class="opts">${cur.opts.map((o,i)=>`<button class="opt" data-i="${i}"><span class="k">${cur.type==="tf"?(i?"F":"T"):L[i]}</span><span class="t">${esc(o)}</span></button>`).join("")}</div>
   <div id="fb"></div>
@@ -143,8 +157,15 @@ function submit(){
   hist[cur.id]=h;store.set("csc311-hist",hist);
   document.querySelectorAll(".opt").forEach(b=>{const i=+b.dataset.i;b.disabled=true;b.classList.remove("picked");
     if(cur.ans.includes(i))b.classList.add("right");else if(picked.has(i))b.classList.add("wrong")});
-  const id=queue.shift();
-  if(ok){doneCount++;again.delete(id)}else{again.add(id);queue.splice(Math.min(3,queue.length),0,id)}
+  const id=R.queue.shift();
+  if(ok){R.done.push(id);R.again=R.again.filter(x=>x!==id)}
+  else{
+    if(!R.again.includes(id))R.again.push(id);
+    R.queue.splice(Math.min(3,R.queue.length),0,id);
+    // Missed again after being cleared in the weak round: let the weak round ask it again
+    if(rounds.weak)rounds.weak.done=rounds.weak.done.filter(x=>x!==id);
+  }
+  saveRounds();
   const fb=document.getElementById("fb");
   fb.innerHTML=`<div class="verdict ${ok?"ok":"no"}">${ok?"答对了":"答错了，几题后再来"}</div><div class="ex"><b>${esc(cur.title)}</b>${esc(cur.ex)}</div>`;
   renderMath(fb);
@@ -156,5 +177,5 @@ document.addEventListener("keydown",e=>{
   if(e.key==="Enter"){e.preventDefault();answered?next():submit();return}
   const n=parseInt(e.key,10);if(n>=1&&n<=cur.opts.length&&!answered)choose(n-1);
 });
-buildWeeks();start();
+buildWeeks();resume();
 </script>
