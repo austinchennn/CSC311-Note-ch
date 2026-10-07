@@ -112,13 +112,30 @@ Pick $k$ (any hyperparameter) via validation set or cross-validation.\\
 \textbf{Tree size}: large $\to$ overfit; Small $\to$ underfit.\\
 \textbf{Inference}: trace the tree from root to leaf.\\
 \textbf{Entropy}:
-\[ H(Y) = -\textstyle\sum_{y} p(y)\log_2 p(y) \]
+\[ H(Y) = -\mathbb E_{Y\sim p(y)}\left[\log_2 p(Y)\right] = -\textstyle\sum_{y} p(y)\log_2 p(y) \]
+\textbf{Notation $H(p_1,\dots,p_n)$}: \sub{Def} entropy of a distribution whose probabilities are $p_1,\dots,p_n$ (arguments are numbers, $\sum_k p_k=1$): $H(p_1,\dots,p_n)=-\sum_k p_k\log_2 p_k$.\\
+\sub{Property} $H(\frac12,\frac12)=-2\cdot\frac12\log_2\frac12=1$ (max for 2 classes; 50/50 split = most uncertain).\\
+\textbf{Joint entropy}: \sub{Def} uncertainty of the pair $(X,Y)$ (arguments are random variables, not probabilities):
+\begin{align*}
+H(X,Y) &= -\mathbb E_{X,Y\sim p(x,y)}\left[\log_2 p(X,Y)\right]\\
+&= -\textstyle\sum_x\sum_y p(x,y)\log_2 p(x,y)
+\end{align*}
+\sub{Chain rule} $H(X,Y)=H(X)+H(Y\mid X)$; \sub{If independent} $H(X,Y)=H(X)+H(Y)$.\\
 \textbf{Conditional entropy}:
-\[ H(Y\mid X\!=\!x) = -\textstyle\sum_{y} p(y\mid x)\log_2 p(y\mid x) \]
+\begin{align*}
+H(Y\mid X\!=\!x) &= -\mathbb E_{Y\sim p(y\mid x)}\left[\log_2 p(Y\mid x)\right]\\
+&= -\textstyle\sum_{y} p(y\mid x)\log_2 p(y\mid x)
+\end{align*}
 \textbf{Expected conditional entropy}:
-\[ H(Y\mid X) = \textstyle\sum_{x} p(x)\,H(Y\mid X\!=\!x) \]
+\begin{align*}
+H(Y\mid X) &= \mathbb E_{X\sim p(x)}\left[H(Y\mid X\!=\!x)\right]\\
+&= \textstyle\sum_{x} p(x)\,H(Y\mid X\!=\!x)\\
+&= -\mathbb E_{X,Y\sim p(x,y)}\left[\log_2 p(Y\mid X)\right]\\
+&= -\textstyle\sum_x\sum_y p(x,y)\log_2 p(y\mid x)
+\end{align*}
 \textbf{Information gain}:
 \[ IG(Y\mid X) = H(Y) - H(Y\mid X) \]
+$0\le IG(Y\mid X)\le H(Y)$, i.e.\ $IG(Y\mid X)\in[0,H(Y)]$.\\
 \textbf{IG table} ($Y$ = label/class, $X$ = split on a feature; count examples per split side \& class):\\
 {\fontsize{4}{4.7}\selectfont\setlength{\tabcolsep}{4pt}\begin{tabular}{@{}l|cc|c@{}}
  & Class 1 & Class 2 & Total\\\hline
@@ -126,23 +143,24 @@ Split cond.\ 1 & $a$ & $b$ & $a+b$\\
 Split cond.\ 2 & $c$ & $d$ & $c+d$\\\hline
 Total & $a+c$ & $b+d$ & $N$
 \end{tabular}}\\
-\sub{Use} $H(Y)$ from the Total row; $H(Y\mid X)$ from the two split rows:
+\[ H(Y)=H\big(\tfrac{a+c}{N},\tfrac{b+d}{N}\big) \]
 \[ H(Y\mid X)=\tfrac{a+b}{N}H\big(\tfrac{a}{a+b},\tfrac{b}{a+b}\big)+\tfrac{c+d}{N}H\big(\tfrac{c}{c+d},\tfrac{d}{c+d}\big) \]
 \textbf{Properties}:\\
 $H(Y)\ge0$; Certain outcome $\to H=0$; Binary: max $H=1$ bit at $p=0.5$.\\
-$H(Y\mid X) \le H(Y)$ (i.e.\ $IG\ge0$).\\
+$H(Y\mid X) \le H(Y)$ (i.e.\ $IG\ge0$; $\because$ observing $X$ can't increase uncertainty about $Y$).\\
 $Y, X$ independent $\Rightarrow IG(Y\mid X) = 0$ (i.e.\ $H(Y\mid X)=H(Y)$).\\
-$Y$ fully determined by $X\Rightarrow H(Y\mid X)=0\Rightarrow IG(Y\mid X)=H(Y)$.\\
+$Y$ fully determined by $X\Rightarrow H(Y\mid X)=0\Rightarrow IG(Y\mid X)=H(Y)$ (i.e.\ max $IG(Y\mid X)$).\\
 
 \subsection{Decision Tree Algorithm}
 \textbf{Stop splitting when}:\\
-(1) All examples have the same label.\\
-(2) No features left.\\
-(3) Max depth reached (hyperparameter).\\
-(4) Loss decreases too little (hyperparameter).\\
-(5) Node has fewer than a min number of samples (hyperparameter).\\
+(1) All examples have the same label $\to$ leaf = that label.\\
+(2) No features or split points left $\to$ leaf = majority class. \sub{When} examples with identical feature values but different labels; A real-valued feature has no split points once all its values in the node are equal.\\
+(3) No examples left $\to$ leaf = parent's majority class. \sub{When} a value of a multi-way split has no examples; Never happens if every feature-value combination appears in the data.\\
+(4) Max depth reached (hyperparameter).\\
+(5) Loss decreases too little (hyperparameter).\\
+(6) Node has fewer than a min number of samples (hyperparameter).\\
 \textbf{Split}: pick the split with max IG (not training error, $\because$ it ignores the uncertainty left in the child nodes).\\
-\textbf{Leaf prediction}: majority class.\\
+\textbf{Leaf prediction}: \sub{Class} majority vote; \sub{Reg} mean.\\
 \textbf{Properties}:\\
 Greedy $\to$ not globally optimal ($\because$ finding the optimal tree is NP-hard).\\
 Boundaries are axis-aligned (each split tests $x_j\le\theta$).\\
@@ -152,7 +170,8 @@ Scale-invariant.\\
 (1) Each split $x_j\le\theta$ is a vertical/horizontal line, drawn only inside its parent node's region.\\
 (2) Leaves = axis-aligned rectangles.\\
 (3) Label each rectangle with its leaf's prediction (majority class).\\
-\textbf{Train cost vs KNN}: DT more ($\because$ compute IG of each split to choose the best feature \& threshold); KNN less (no computation, just stores data).
+\textbf{Train cost vs KNN}: DT more ($\because$ compute IG of each split to choose the best feature \& threshold); KNN less (no computation, just stores data).\\
+\textbf{Pros} (vs KNN): handles discrete features directly (one branch per value, no distance needed).
 
 \section{Linear / GD}
 \textbf{Setup}: $N$ = number of examples, $D$ = number of input features.\\
