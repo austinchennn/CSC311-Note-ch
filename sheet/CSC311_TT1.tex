@@ -32,17 +32,27 @@
 \newcommand{\sub}[1]{\textit{#1}:}  % in-line sub-label (Def/Effect/Cause/Fix/Rule/Why...)
 
 \begin{document}
-\fontsize{5.5}{6.5}\selectfont
+\fontsize{5.5}{6.4}\selectfont
+\raggedcolumns
 \begin{multicols*}{3}
 
 \section{KNN}
 \subsection{The Very Basics}
+\textbf{AI} \sub{Def}: the study of agents that receive percepts from the environment and perform actions. The goal is to design agents that ``behave rationally''.\\
+\textbf{ML} \sub{Def}: a subset of AI that enables systems to improve their performance on a task through experience; learns from and makes decisions based on data, without being explicitly programmed for each specific task.\\
+\textbf{DL} \sub{Def}: a machine learning technique that uses multilayered neural networks to model complex patterns in data.\\
+\textbf{LLMs} \sub{Def}: a class of deep learning models trained on vast amounts of text data to understand and generate human-like language.\\
+\textbf{Fundamental Ideas in ML}: (1) Learning is optimization; (2) ML requires balancing tradeoffs in sources of error; (3) Model evaluation is empirical; (4) ML describes geometric processes; (5) ML demands a probabilistic lens.\\
+\textbf{Relation}: AI (broad field of making machines behave intelligently) $\supset$ ML (learns patterns/rules from data instead of being explicitly programmed) $\supset$ DL (multi-layer neural networks to learn feature representations automatically).\\
+\textbf{Supervised} \sub{Def}: learn a mapping $\vec{x}\to t$ from labelled input--target pairs.\\
+\textbf{Unsupervised} \sub{Def}: only unlabelled data; discover structure (e.g.\ clustering, dimensionality reduction).\\
+\textbf{Reinforcement} \sub{Def}: an agent interacts with an environment and learns a policy that maximizes cumulative reward; no correct answers given, only reward signals.\\
 \textbf{Learning}: find a model $f$ that maps from inputs to outputs given a labeled training dataset.\\
 \textbf{Inference}: use a model $f$ to predict an output $y$ given a new example $\vec{x}$\\
 \textbf{A model} is a function $f$ mapping input $\vec{x}$ to output prediction $y$.\\
 \textbf{A model family} is a set of models that share the same structure but differ in parameters (e.g.\ layers in a neural network)\\
-\textbf{Accuracy} is calculated as follows:
-\[ \frac{\sum_{i=1}^N \ind\left[t^{(i)}=y^{(i)}\right]}{N} \]
+\textbf{Accuracy}: $\text{accuracy}=\frac{1}{N}\sum_{i=1}^N \ind\left[t^{(i)}=y^{(i)}\right]$.\\
+\textbf{Error rate}: $1-\text{accuracy}=\frac{1}{N}\sum_{i=1}^N \ind\left[t^{(i)}\ne y^{(i)}\right]$.\\
 A \textbf{parameter} is the internal variables of a model learned from data whilst training.\\
 A \textbf{hyperparameter} are the settings chosen before training that controls how the learning process works.\\
 \textbf{Train}: fit parameters.\\
@@ -75,12 +85,17 @@ Data augmentation: changing the training data by a little bit to create new trai
 \sub{Euclidean} (1) for nearby pairs of \emph{different} classes draw the perpendicular bisector $(\mathbf b-\mathbf a)^T\vx=\frac{\|\mathbf b\|^2-\|\mathbf a\|^2}{2}$; (2) cut bisectors at Voronoi vertices (points equidistant to 3 training points); (3) keep only edges separating different classes; (4) check with a test point.\\
 \sub{Manhattan} bisector of 2 points depends on their bounding box: wide ($|\Delta x_1|>|\Delta x_2|$) $\to$ $45^\circ$ segment inside the box, then vertical rays; Tall $\to$ $45^\circ$ segment, then horizontal rays; Square $\to$ diagonal + 2-D tie regions (state the tie-breaking rule).\\
 \sub{Cosine} only the angle matters $\to$ regions are wedges from the origin; Boundary = rays along angle bisectors of adjacent points of different classes.\\
+\textbf{Classify a point}: \sub{Steps} list $d^2$ to every training point (skip $\sqrt{}$, same order) $\to$ take the $k$ smallest $\to$ majority vote; Tie $\to$ use the stated tie rule. \sub{1NN says A, $k$NN says B} overlay both boundaries, pick a point strictly inside the overlap (on a boundary = tie).\\
+\textbf{Training accuracy} ($k$NN): \sub{Formula} $\tfrac{1}{N_{\text{train}}}\sum_{i}\ind[y(\vx^{(i)})=t^{(i)}]$. \sub{Rule} each training point is its own nearest neighbour ($d=0$) $\to$ its vote = its own label + its $k\!-\!1$ nearest other points.
+\sub{Why 1NN = 100\%} the only neighbour is the point itself $\to$ always predicts its own label (unless duplicate $\vx$ with different labels).
+\sub{Why 3NN not} its own label is only 1 of 3 votes; The 2 nearest other points can outvote it if both have a different label.\\
 \textbf{Pros}: simple; No training; Works for regression and classification; Adapts easily to new data.\\
 \textbf{Cons}:\\
-(1) \textbf{Curse of dimensionality}: in high dimensions most points are far apart from each other ($L_\infty$ on $[0,1]^d$: fraction within $\epsilon$ of origin $=\epsilon^d$; $\because\epsilon<1$, $d\uparrow\Rightarrow\epsilon^d\to0$).\\
-(2) Sensitive to ranges of features (larger range dominates distance calculations).\\
+(1) \textbf{Curse of dimensionality}: in high dimensions most points are far apart from each other ($L_\infty$ on $[0,1]^d$: fraction within $\epsilon$ of origin $=\epsilon^d$; $\because\epsilon<1$, $d\uparrow\Rightarrow\epsilon^d\to0$) $\to$ \sub{Sol} add more data or reduce dimensionality.\\
+(2) Sensitive to ranges of features (larger range dominates distance calculations) $\to$ \sub{Sol} normalization.\\
 (3) Slow prediction: distance to all $N$ points, $O(ND)$ per query.\\
 (4) Must store the entire training set, $O(ND)$ space.\\
+(5) Discrete features (e.g.\ Outlook $\in\{$Sunny, Overcast, Rain$\}$): values aren't numeric $\to$ no clear distance; Prefer DT.\\
 \textbf{Choose $k$}:\\
 $k\uparrow\ \to$ boundary smoother, less sensitive to individual points $\to$ underfit; $k=N\to$ always predicts the majority class.\\
 $k=1\to$ sharp boundary, overfit; 100\% training accuracy (unless duplicate $\vx$ with different labels).\\
