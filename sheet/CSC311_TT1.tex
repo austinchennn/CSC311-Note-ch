@@ -178,19 +178,22 @@ Scale-invariant.\\
 \textbf{Dummy}: $x_0^{(i)}=1\Rightarrow b=w_0x_0^{(i)}$:\\
 $\vx^{(i)}=[1,x_1^{(i)},\dots,x_D^{(i)}]^T\in\mathbb R^{(D+1)\times1}$\\
 $\vw=[w_0,\dots,w_D]^T\in\mathbb R^{(D+1)\times1}$\\
-$y^{(i)}=\vw^T\vx^{(i)}\in\mathbb R$\\
+$y^{(i)}=\vw^T\vx^{(i)}\ (=\vx^{(i)T}\vw)=\sum_{j=0}^D x^{(i)}_jw_j\in\mathbb R$\\
 $X=\begin{bmatrix}(\vx^{(1)})^T\\[-2pt]\vdots\\[-2pt](\vx^{(N)})^T\end{bmatrix}\in\mathbb R^{N\times(D+1)}$ (row = example)\\
 $\vt,\mathbf y\in\mathbb R^{N\times1}$, $\mathbf y=X\vw$\\
 \textbf{Prediction}: $y=\vw^T\vx+b$, $\mathbf y=X\vw$ ($X\in\mathbb R^{N\times(D+1)}$, row = example).\\
 \textbf{Gradient direction}: $\nabla$ = direction of steepest ascent, perpendicular to contours $\to$ GD steps along $-\nabla$.\\
-\textbf{Learning rate} $\alpha$: too big $\to$ overshoot/diverge; Too small $\to$ converges slowly.\\
 \textbf{Feature map}: $\psi(\vx)$ (e.g.\ $[1,x,x^2]$) $\to$ fits nonlinear functions of $x$, model still linear in $\vw$.\\
+\textbf{Train/val error vs complexity}: \sub{Train} $\downarrow$ as complexity $\uparrow$; \sub{Val} $\downarrow$ then $\uparrow$ (U-shape).\\
+\sub{Underfit} low complexity: both high, small gap, both still $\downarrow$ $\to$ increase complexity.\\
+\sub{Overfit} high complexity: train $\downarrow$ (to 0), val $\uparrow$, gap large \& growing $\to$ fits noise.\\
+\sub{Good fit} val at its min, moderate gap $\to$ best bias--variance trade-off; Choose this complexity.\\
 \textbf{Cost function}: $\cE(\vw) = \tfrac{1}{N}\sum_{i=1}^N \cL\big(y^{(i)}, t^{(i)}\big)$\\
 \textbf{Loss function}: $\cL(y,t) = \tfrac{1}{2}(y-t)^2$\\
 Loss = how off one single example is; Cost = average over a set of examples.\\
 \textbf{Linear cost}:
 \begin{align*}
-\cE(\vw) &= \frac{1}{2N}\sum_{i=1}^N\left(\vw^T\vx - t^{(i)}\right)^2\\
+\cE(\vw) &= \frac{1}{2N}\sum_{i=1}^N\left(\vw^T\vx^{(i)} - t^{(i)}\right)^2\\
 \cE(\vw) &= \frac{1}{2N}(X\vw-\vt)^T(X\vw-\vt)
 \end{align*}
 
@@ -214,38 +217,90 @@ Let $r^{(i)}=\vw^T\vx^{(i)}-t^{(i)}\in\mathbb R$, $\vr=X\vw-\vt\in\mathbb R^{N\t
 $\Rightarrow\vw=(X^TX)^{-1}X^T\vt$\\
 \ \ \textbf{Pros}: closed form, exact \& provably optimal, no iteration.\\
 \ \ \textbf{Cons}: closed-form solution may not exist for most problems; Can't generalize to most models; Computationally expensive: $(X^TX)^{-1}$ is $O(D^3)$.\\
-\textbf{(2) GD}: $\underbrace{\vw}_{\in\mathbb R^{(D+1)\times1}}\leftarrow\vw-\frac{\alpha}{N}\underbrace{X^T(X\vw-\vt)}_{\in\mathbb R^{(D+1)\times1}}$\\
+\begin{minipage}{\linewidth}
+\textbf{(2) GD update}:\\
+\sub{Non-vectorized} $w_j\leftarrow w_j-\frac{\alpha}{N}\sum_{i=1}^N(\vw^T\vx^{(i)}-t^{(i)})x_j^{(i)}$\\
+\sub{Vectorized} $\underbrace{\vw}_{\in\mathbb R^{(D+1)\times1}}\leftarrow\vw-\frac{\alpha}{N}\underbrace{X^T(X\vw-\vt)}_{\in\mathbb R^{(D+1)\times1}}$
+\end{minipage}\\
+\textbf{Learning rate} $\alpha$: too big $\to$ overshoot/diverge; Too small $\to$ converges slowly.\\
 \textbf{Large Weight}: \sub{Why problematic} one feature contributes a lot to the prediction, but a good prediction uses many features $\to$ sign of overfitting.\\
 \textbf{Regularization}:\\
 \sub{Def} modify training to choose models using criteria beyond training error, i.e.\ minimize $\cE+\lambda\mathcal R$ (penalize large $\vw$).\\
 \sub{Effect of $\lambda$} small $\to$ overfit; Big $\to$ underfit.\\
 \sub{Not} forcing weights to similar scale; Not guaranteeing 0 training error; Adds (not removes) hyperparameter $\lambda$.\\
-\[ \tfrac{\lambda}{2}\textstyle\sum_{j=0}^D w_j^2 \]
+\textbf{L2 regularization}: $\mathcal R=\tfrac12\textstyle\sum_{j=0}^D w_j^2$\\
 \textbf{$\nabla$ regularizer}:
 \begin{gather*}
 \frac{\partial}{\partial w_j}\left(\frac{\lambda}{2}\sum_{j=0}^D w_j^2\right) = \lambda w_j\\
 \nabla_{\vw}\left(\frac{\lambda}{2}\vw^T\vw\right) = \lambda\vw
 \end{gather*}
+\textbf{Gradient} (regularized):\\
+$\frac{\partial\cE}{\partial w_j}=\frac1N\sum_{i=1}^N(\vw^T\vx^{(i)}-t^{(i)})x_j^{(i)}+\lambda w_j$\\
+$\nabla_\vw\cE=\frac1NX^T(X\vw-\vt)+\lambda\vw\in\mathbb R^{D+1}$\\
+\textbf{GD update} (regularized):\\
+\sub{Non-vectorized} $w_j\leftarrow w_j-\alpha\big(\frac1N\sum_{i=1}^N(\vw^T\vx^{(i)}-t^{(i)})x_j^{(i)}+\lambda w_j\big)$\\
+\sub{Vectorized} $\vw\leftarrow\vw-\alpha\big(\frac1NX^T(X\vw-\vt)+\lambda\vw\big)$\\
+\textbf{Direct} (regularized): \sub{Steps} set $\nabla_\vw\cE=\mathbf 0$, multiply by $N$, write $\vw=I\vw$ ($I\in\mathbb R^{(D+1)\times(D+1)}$):
+\begin{align*}
+X^TX\vw+N\lambda\vw&=X^T\vt\\
+(X^TX+N\lambda I)\vw&=X^T\vt\\
+\vw&=(X^TX+N\lambda I)^{-1}X^T\vt
+\end{align*}
+\sub{Why $I$} $X^TX+N\lambda$ (matrix + scalar) is undefined, so factor $\vw$ out as $I\vw$.\\
+\textbf{L1 regularization}: $\mathcal R=\textstyle\sum_{j=0}^D|w_j|$\\
+\sub{Effect} drives many $w_j$ exactly to 0 $\to$ sparse $\vw$ (feature selection); L2 only shrinks $w_j$ toward 0.\\
+\textbf{$\nabla$ regularizer}: $\frac{\partial}{\partial w_j}\big(\lambda\sum_j|w_j|\big)=\lambda\,\operatorname{sgn}(w_j)$ (not differentiable at $w_j=0$); $\nabla_\vw=\lambda\,\operatorname{sgn}(\vw)$\\
+\textbf{Gradient} (L1):\\
+$\frac{\partial\cE}{\partial w_j}=\frac1N\sum_{i=1}^N(\vw^T\vx^{(i)}-t^{(i)})x_j^{(i)}+\lambda\,\operatorname{sgn}(w_j)$\\
+$\nabla_\vw\cE=\frac1NX^T(X\vw-\vt)+\lambda\,\operatorname{sgn}(\vw)\in\mathbb R^{D+1}$\\
+\textbf{GD update} (L1):\\
+\sub{Non-vectorized} $w_j\leftarrow w_j-\alpha\big(\frac1N\sum_{i=1}^N(\vw^T\vx^{(i)}-t^{(i)})x_j^{(i)}+\lambda\,\operatorname{sgn}(w_j)\big)$\\
+\sub{Vectorized} $\vw\leftarrow\vw-\alpha\big(\frac1NX^T(X\vw-\vt)+\lambda\,\operatorname{sgn}(\vw)\big)$\\
+\sub{Direct} no closed form.\\
 \textbf{With bias term}:
 \begin{align*}
-\cE(\vw) &= \frac{1}{2N}(X\vw+b-\vt)^T(X\vw+b-\vt)\\
-\nabla_{\vw}\cE(\vw) &= \frac{1}{N}X^T(X\vw+b-\vt)\\
+\cE(\vw) &= \frac{1}{2N}(X\vw+b\mathbf 1-\vt)^T(X\vw+b\mathbf 1-\vt)\\
+\nabla_{\vw}\cE(\vw) &= \frac{1}{N}X^T(X\vw+b\mathbf 1-\vt)\\
 \frac{\partial\cE(\vw)}{\partial w_j} &= \frac{1}{N}\sum_{i=1}^N\left(\vw^T\vx^{(i)}+b-t^{(i)}\right)x_j^{(i)}\\
-\frac{\partial\cE(\vw)}{\partial b} &= \frac{1}{N}(X\vw+b-\vt)
+\frac{\partial\cE(\vw)}{\partial b} &= \frac{1}{N}\sum_{i=1}^N\left(\vw^T\vx^{(i)}+b-t^{(i)}\right)\\
+&= \frac{1}{N}\mathbf 1^T(X\vw+b\mathbf 1-\vt)
 \end{align*}
+\textbf{GD update} (with bias):\\
+\sub{Non-vectorized} $w_j\leftarrow w_j-\frac{\alpha}{N}\sum_{i=1}^N(\vw^T\vx^{(i)}+b-t^{(i)})x_j^{(i)}$,\\
+$b\leftarrow b-\frac{\alpha}{N}\sum_{i=1}^N(\vw^T\vx^{(i)}+b-t^{(i)})$\\
+\sub{Vectorized} $\vw\leftarrow\vw-\frac{\alpha}{N}X^T(X\vw+b\mathbf 1-\vt)$,\\
+$b\leftarrow b-\frac{\alpha}{N}\mathbf 1^T(X\vw+b\mathbf 1-\vt)$\\
+\textbf{Direct} (with bias, 1 feature, $y=wx+b$): \sub{Steps} set $\frac{\partial\cE}{\partial w}=0$ and $\frac{\partial\cE}{\partial b}=0$ $\to$ 2 linear equations in $w,b$ $\to$ plug in the data points:
+\[ \tfrac1N\textstyle\sum_i(wx^{(i)}+b-t^{(i)})x^{(i)}=0,\quad \tfrac1N\sum_i(wx^{(i)}+b-t^{(i)})=0 \]
+\begin{minipage}{\linewidth}
+\textbf{Normal eq for 1 feat}: \sub{Equations} multiply the 2 Direct (with bias) equations by $N$, expand ($\sum=\sum_{i=1}^N$):
+\begin{align*}
+w\textstyle\sum(x^{(i)})^2+b\sum x^{(i)}&=\textstyle\sum x^{(i)}t^{(i)}\\
+w\textstyle\sum x^{(i)}+bN&=\textstyle\sum t^{(i)}
+\end{align*}
+\sub{Matrix form} same as $X^TX\vw=X^T\vt$ with row $i$ of $X$ = $[x^{(i)},1]$:
+\[ \begin{bmatrix}\sum(x^{(i)})^2&\sum x^{(i)}\\\sum x^{(i)}&N\end{bmatrix}\begin{bmatrix}w\\b\end{bmatrix}=\begin{bmatrix}\sum x^{(i)}t^{(i)}\\\sum t^{(i)}\end{bmatrix} \]
+\sub{Solution}
+\begin{gather*}
+w=\frac{N\sum x^{(i)}t^{(i)}-\sum x^{(i)}\sum t^{(i)}}{N\sum(x^{(i)})^2-\left(\sum x^{(i)}\right)^2}\\
+b=\frac{\sum t^{(i)}-w\sum x^{(i)}}{N}=\bar t-w\bar x
+\end{gather*}
+($\bar x,\bar t$ = means of $x^{(i)},t^{(i)}$)
+\end{minipage}
 
 \subsection{Stochastic GD}
-\textbf{SGD update} ($i$ random):
-\[ \vw \leftarrow \vw - \alpha\tfrac{\partial\cL}{\partial\vw} \]
-\textbf{Iteration}: 1 weight update from 1 mini-batch of $B$ examples ($B$ = hyperparameter).\\
-\textbf{Epoch}: every training example used once ($=N/B$ iterations).\\
-{\fontsize{4}{4.7}\selectfont\setlength{\tabcolsep}{2pt}\begin{tabular}{@{}llll@{}}
+\textbf{SGD update} ($i$ random, 1 example $\Rightarrow$ no $\frac1N\sum_i$): $\vw\leftarrow\vw-\alpha\nabla_\vw\cL^{(i)}$; For LinReg:\\
+\sub{Non-vectorized} $w_j\leftarrow w_j-\alpha(\vw^T\vx^{(i)}-t^{(i)})x_j^{(i)}$\\
+\sub{Vectorized} $\vw\leftarrow\vw-\alpha(\vw^T\vx^{(i)}-t^{(i)})\vx^{(i)}$\\
+\textbf{Iteration} \sub{Def}: a single update step in the optimization algorithm. In SGD, one iteration = processing one mini-batch and updating the parameters once.\\
+\textbf{Epoch} \sub{Def}: one complete pass through the entire training dataset. In SGD, one epoch = processing all mini-batches exactly once.\\
+{\fontsize{4}{4.7}\selectfont\setlength{\tabcolsep}{2pt}\begin{tabularx}{\linewidth}{@{}l*{3}{>{\raggedright\arraybackslash}X}@{}}
  & Batch & Mini-batch & SGD\\\hline
 \#examples/update & all $N$ & $B$, $1\!<\!B\!<\!N$ & 1\\
 Gradient accuracy & exact & noisy ($\downarrow$ as $B\uparrow$) & noisiest\\
-Cost/update & $O(N)$ & $O(B)$ & $O(1)$\\
-Vectorization & high (memory limit?) & high, fits hardware & low
-\end{tabular}}\\
+Cost/update & grows with $N$ & grows with $B$ & 1 example\\
+Vectorization & High, but the full dataset may not fit in memory & High, and $B$ can be chosen to fit the hardware & Low, one example at a time
+\end{tabularx}}\\
 \textbf{Mini-batch gradient}: unbiased estimate of the full gradient.\\
 \textbf{SGD Pros}: noisy gradient $\to$ can escape flat regions (e.g.\ plateaus); No guarantee of reaching the global optimum.\\
 \textbf{Ravine}:\\
@@ -258,7 +313,7 @@ Vectorization & high (memory limit?) & high, fits hardware & low
 $X\in\mathbb R^{N\times D}$; Other variables' shapes are inferred.\\
 \textbf{Answer format}: vectors are columns; For every new symbol state its dimension and define its components (e.g.\ $X\in\mathbb R^{P\times Q}$, row $i$ = $\mathbf x_i^T$).\\
 \textbf{Dot product}:
-\[ \textstyle\sum_{i=1}^N u_i v_i = \vu^T\vv \]
+\[ \textstyle\sum_{i=1}^N u_i v_i = \vu^T\vv = \vv^T\vu \]
 \textbf{Hadamard product}:
 \[ \vu\odot\vv = \operatorname{diag}(\vu)\,\vv = \left(\vu^T\operatorname{diag}(\vv)\right)^T \]
 \textbf{Sum a vector}:
@@ -274,14 +329,11 @@ May need to transpose.\\
 \[ \textstyle\sum_{i=1}^P u_i\mathbf m_i^T = \vu^TM\in\mathbb R^{1\times Q} \]
 Transpose of above (column form):
 \[ \textstyle\sum_{i=1}^P u_i\mathbf m_i = M^T\vu\in\mathbb R^{Q\times1} \]
-\textbf{Row-wise multiplication}:
-\[ \operatorname{diag}(\vu)X = \begin{bmatrix} - & u_1\vx^{(1)} & - \\ - & u_i\vx^{(i)} & - \\ - & u_N\vx^{(N)} & - \end{bmatrix} \]
-\textbf{Column-wise multiplication}:
-\[ X\cdot\operatorname{diag}(\vv) = \begin{bmatrix} | & | & | \\ v_1\vx_1 & v_2\vx_2 & v_3\vx_3 \\ | & | & | \end{bmatrix} \]
-\textbf{Tip}: output height = height of leftmost matrix (e.g.\ $X^T\vr\in\mathbb R^{D\times1}$).
-\[ \textstyle\sum_{i=1}^N r^{(i)}\vx^{(i)} = X^T\vr \]
+\textbf{Row-wise multiplication} ($M\in\mathbb R^{P\times Q}$, row $i$ = $\mathbf m_i^T$, $\mathbf m_i\in\mathbb R^{Q\times1}$; $\vu\in\mathbb R^{P\times1}$):
+\[ \operatorname{diag}(\vu)M = \begin{bmatrix} - & u_1\mathbf m_1^T & - \\ - & u_i\mathbf m_i^T & - \\ - & u_P\mathbf m_P^T & - \end{bmatrix}\in\mathbb R^{P\times Q} \]
+\textbf{Column-wise multiplication} ($M\in\mathbb R^{P\times Q}$, column $j$ = $\mathbf m_j\in\mathbb R^{P\times1}$; $\vv\in\mathbb R^{Q\times1}$):
+\[ M\operatorname{diag}(\vv) = \begin{bmatrix} | & | & | \\ v_1\mathbf m_1 & v_j\mathbf m_j & v_Q\mathbf m_Q \\ | & | & | \end{bmatrix}\in\mathbb R^{P\times Q} \]
 \textbf{Shape reasoning}: the summed index ($N$) must be the \emph{inner} dimension so it cancels; The first dimension of the result goes on the left.\\
-\textbf{Stack predictions}: $(X\vw)_i = \vw^T\vx^{(i)}$, $X\vw\in\mathbb{R}^{N\times 1}$.\\
 \textbf{Scalar with vector} ($s\in\mathbb{R}$):
 \begin{gather*} \alpha_i = u_i + s \Rightarrow \boldsymbol{\alpha} = \vu + s\mathbf{1}\\ \beta_i = s u_i \Rightarrow \boldsymbol{\beta} = s\vu \end{gather*}
 \textbf{Outer product}:
@@ -304,7 +356,9 @@ Transpose of above (column form):
   \item Per-example weight $\alpha_i$: $\sum_i \alpha_i r^{(i)}\vx^{(i)} = X^T\operatorname{diag}(\mathbf{a})\vr$
   \item \raggedright Per-feature scale $\alpha_j$: predictions $X\operatorname{diag}(\boldsymbol{\alpha})\vw$, gradient gains a $\operatorname{diag}(\boldsymbol{\alpha})$ on the left: $\frac1N\operatorname{diag}(\boldsymbol{\alpha})X^T\vr'$, $\vr' = X\operatorname{diag}(\boldsymbol{\alpha})\vw-\vt$
 \end{itemize}
-\textbf{Absorb bias}: $\vw_1^T\vx_1 + b = \vw_2^T\vx_2$ with $\vw_2 = \begin{bmatrix} b\\ \vw_1\end{bmatrix}$, $\vx_2 = \begin{bmatrix} 1\\ \vx_1\end{bmatrix}$ ($\vw_2,\vx_2\in\mathbb R^{(D+1)\times1}$).
+\textbf{Absorb bias}: $\vw_1^T\vx_1 + b = \vw_2^T\vx_2$ with $\vw_2 = \begin{bmatrix} b\\ \vw_1\end{bmatrix}$, $\vx_2 = \begin{bmatrix} 1\\ \vx_1\end{bmatrix}$ ($\vw_2,\vx_2\in\mathbb R^{(D+1)\times1}$).\\
+\textbf{Quadratic form gradient}:
+\[ \nabla_\vw\|A\vw-\vt\|^2=2A^T(A\vw-\vt) \]
 
 \section{Logistic Regression}
 \textbf{Output}: $y=\sigma(\vw^T\vx)=p(t=1\mid\vx)$, threshold $0.5$.\\
