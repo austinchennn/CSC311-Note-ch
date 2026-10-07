@@ -379,7 +379,12 @@ Transpose of above (column form):
   \item \textbf{Sigmoid + Squared Error}:\\
   $y = \sigma(z) = \frac{1}{1+e^{-z}}$, $L_{SE}(y,t) = \frac{1}{2}(y-t)^2$
   \begin{itemize}
-    \item Vanishing gradient when the prediction is very wrong.
+    \item When the prediction is very wrong $\to$ $\sigma$ saturates $\to$ the gradient is close to 0.
+  \end{itemize}
+  \item \textbf{Step + Squared Error}:\\
+  $y = \ind[z\ge0.5]$, $L_{SE}(y,t) = \frac{1}{2}(y-t)^2$
+  \begin{itemize}
+    \item $\frac{\partial y}{\partial z}=0$ almost everywhere $\to$ zero gradient, can't update $\vw$ (same as 0-1 loss).
   \end{itemize}
   \item \textbf{Cross entropy}: $\begin{cases} -\log(y) & t=1\\ -\log(1-y) & t=0 \end{cases}$
 \end{itemize}
@@ -399,22 +404,18 @@ y &= \sigma(z) = \frac{1}{1+e^{-z}}\\
 \textbf{Loss}:
 \[ \cL_{CE}(y,t) = -t\log(y) - (1-t)\log(1-y) \]
 \textbf{Gradient}:\\
-Where $\cE(\vw) = \frac{1}{N}\sum_{i=1}^N \cL_{CE}\left(y^{(i)}, t^{(i)}\right)$
+Where $\cE(\vw) = \frac{1}{N}\sum_{i=1}^N \cL_{CE}\left(y^{(i)}, t^{(i)}\right)$; for a single example, dropping $(i)$:
 \begin{align*}
-\frac{\partial\cL_{CE}}{\partial y} &= -\frac{t}{y}+\frac{1-t}{1-y}\\
-&= \frac{-t(1-y)+(1-t)y}{y(1-y)}=\frac{y-t}{y(1-y)}\\
-\frac{\partial y}{\partial z} &= y(1-y),\qquad \frac{\partial z}{\partial w_j}=x_j\\
 \frac{\partial\cL_{CE}}{\partial w_j} &= \frac{\partial\cL_{CE}}{\partial y}\cdot\frac{\partial y}{\partial z}\cdot\frac{\partial z}{\partial w_j}\\
 &= \Big(-\frac{t}{y}+\frac{1-t}{1-y}\Big)\cdot y(1-y)\cdot x_j\\
 &= \frac{y-t}{y(1-y)}\cdot y(1-y)\cdot x_j\\
 &= (y-t)x_j
 \end{align*}
-\textbf{GD update for LogReg}:
-\begin{align*}
-w_j &\leftarrow w_j - \alpha\frac{\partial\cE}{\partial w_j}\\
-&= w_j - \frac{\alpha}{N}\sum_{i=1}^N\left(y^{(i)} - t^{(i)}\right)x_j^{(i)}
-\end{align*}
-\[ \vw \leftarrow \vw - \tfrac{\alpha}{N}X^T(\sigma(X\vw)-\vt) \]
+$\Rightarrow\frac{\partial\cE}{\partial w_j}=\frac1N\sum_{i=1}^N(y^{(i)}-t^{(i)})x_j^{(i)}$\\
+$\Rightarrow\nabla_\vw\cE=\frac1NX^T(\mathbf y-\vt)$, $\mathbf y=\sigma(X\vw)\in\mathbb R^{N\times1}$\\
+\textbf{GD update}:\\
+\sub{Non-vectorized} $w_j\leftarrow w_j-\frac{\alpha}{N}\sum_{i=1}^N(y^{(i)}-t^{(i)})x_j^{(i)}$\\
+\sub{Vectorized} $\vw\leftarrow\vw-\frac{\alpha}{N}X^T(\sigma(X\vw)-\vt)$\\
 \textbf{Pros}:\\
 $\cL\to\infty$ for confident wrong predictions.\\
 $\partial\cL/\partial z=y-t$ (no saturation).\\
@@ -466,9 +467,13 @@ Typical failure & Underfits a nonlinear boundary & Overfits when $k$ is small
 (3) Smooth, differentiable approximation of argmax $\Rightarrow$ GD works.\\
 (4) $K=2$: $y_1=\frac{e^{z_1}}{e^{z_1}+e^{z_2}}=\frac{1}{1+e^{-(z_1-z_2)}}=\sigma(z_1\!-\!z_2)$, $y_2=\sigma(-z)$.\\
 \textbf{Loss}: $\cL_{CE}=-\sum_k t_k\log y_k=-\vt^T\log\mathbf{y}=-\log y_{\text{true}}$ (1 nonzero term).\\
-\textbf{Gradient}: $\frac{\partial\cL}{\partial z_k}=y_k-t_k$, $\nabla_{\vw_k}\cL=(y_k-t_k)\vx$
-\[ \vw_k\leftarrow\vw_k-\tfrac{\alpha}{N}\textstyle\sum_i(y_k^{(i)}-t_k^{(i)})\vx^{(i)} \]
-\textbf{Matrix}: $\nabla_W\cE=\frac1N(Y-T)^TX$ ($Y,T\in\mathbb R^{N\times K}$, rows $\mathbf{y}^{(i)T},\vt^{(i)T}$).\\
+\textbf{Gradient}:\\
+$\frac{\partial\cL}{\partial z_k}=y_k-t_k\Rightarrow\nabla_{\vw_k}\cL=(y_k-t_k)\vx$\\
+$\Rightarrow\nabla_{\vw_k}\cE=\frac1N\sum_{i=1}^N(y_k^{(i)}-t_k^{(i)})\vx^{(i)}$\\
+$\Rightarrow\nabla_W\cE=\frac1N(Y-T)^TX\in\mathbb R^{K\times(D+1)}$ ($Y,T\in\mathbb R^{N\times K}$, rows $\mathbf{y}^{(i)T},\vt^{(i)T}$)\\
+\textbf{GD update}:\\
+\sub{Non-vectorized} $\vw_k\leftarrow\vw_k-\frac{\alpha}{N}\sum_{i=1}^N(y_k^{(i)}-t_k^{(i)})\vx^{(i)}$ (each $k$)\\
+\sub{Vectorized} $W\leftarrow W-\frac{\alpha}{N}(Y-T)^TX$\\
 \textbf{Boundary $i$/$j$}: needs BOTH, (1) $z_i=z_j\iff(\vw_i-\vw_j)^T\vx=0$ (line); (2) $z_k\le z_i\ \forall k\ne i,j$.\\
 \textbf{Steps}: solve (1) for line $\to$ substitute into (2) $\to$ inequality gives ray/segment $\to$ all 3 lines meet where $z_1=z_2=z_3$ $\to$ test a point per region. At most $K(K\!-\!1)/2$ boundaries.\\
 \textbf{Cons}: linear boundaries only (convex regions); Can't do nonlinear.
