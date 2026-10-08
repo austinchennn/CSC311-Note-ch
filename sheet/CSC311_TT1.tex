@@ -1,3 +1,4 @@
+\RequirePackage{fix-cm}
 \documentclass[10pt]{article}
 \usepackage[letterpaper,margin=0.2in]{geometry}
 \usepackage{amsmath,amssymb,bm}
@@ -6,6 +7,7 @@
 \usepackage{graphicx}
 \usepackage{enumitem}
 \usepackage{titlesec}
+\usepackage{tabularx}
 
 \setlength{\parindent}{0pt}
 \setlength{\columnsep}{8pt}
@@ -27,99 +29,175 @@
 \newcommand{\vr}{\mathbf{r}}
 \newcommand{\cE}{\mathcal{E}}
 \newcommand{\cL}{\mathcal{L}}
+\newcommand{\sub}[1]{\textit{#1}:}  % in-line sub-label (Def/Effect/Cause/Fix/Rule/Why...)
 
 \begin{document}
-\fontsize{9.5}{11}\selectfont
+\fontsize{5.5}{6.4}\selectfont
+\raggedcolumns
 \begin{multicols*}{3}
 
 \section{KNN}
 \subsection{The Very Basics}
+\textbf{AI} \sub{Def}: the study of agents that receive percepts from the environment and perform actions. The goal is to design agents that ``behave rationally''.\\
+\textbf{ML} \sub{Def}: a subset of AI that enables systems to improve their performance on a task through experience; learns from and makes decisions based on data, without being explicitly programmed for each specific task.\\
+\textbf{DL} \sub{Def}: a machine learning technique that uses multilayered neural networks to model complex patterns in data.\\
+\textbf{LLMs} \sub{Def}: a class of deep learning models trained on vast amounts of text data to understand and generate human-like language.\\
+\textbf{Fundamental Ideas in ML}: (1) Learning is optimization; (2) ML requires balancing tradeoffs in sources of error; (3) Model evaluation is empirical; (4) ML describes geometric processes; (5) ML demands a probabilistic lens.\\
+\textbf{Relation}: AI (broad field of making machines behave intelligently) $\supset$ ML (learns patterns/rules from data instead of being explicitly programmed) $\supset$ DL (multi-layer neural networks to learn feature representations automatically).\\
+\textbf{Supervised} \sub{Def}: learn a mapping $\vec{x}\to t$ from labelled input--target pairs.\\
+\textbf{Unsupervised} \sub{Def}: only unlabelled data; discover structure (e.g.\ clustering, dimensionality reduction).\\
+\textbf{Reinforcement} \sub{Def}: an agent interacts with an environment and learns a policy that maximizes cumulative reward; no correct answers given, only reward signals.\\
 \textbf{Learning}: find a model $f$ that maps from inputs to outputs given a labeled training dataset.\\
 \textbf{Inference}: use a model $f$ to predict an output $y$ given a new example $\vec{x}$\\
 \textbf{A model} is a function $f$ mapping input $\vec{x}$ to output prediction $y$.\\
 \textbf{A model family} is a set of models that share the same structure but differ in parameters (e.g.\ layers in a neural network)\\
-\textbf{Accuracy} is calculated as follows:
-\[ \frac{\sum_{i=1}^N \ind\left[t^{(i)}=y^{(i)}\right]}{N} \]
+\textbf{Accuracy}: $\text{accuracy}=\frac{1}{N}\sum_{i=1}^N \ind\left[t^{(i)}=y^{(i)}\right]$.\\
+\textbf{Error rate}: $1-\text{accuracy}=\frac{1}{N}\sum_{i=1}^N \ind\left[t^{(i)}\ne y^{(i)}\right]$.\\
 A \textbf{parameter} is the internal variables of a model learned from data whilst training.\\
 A \textbf{hyperparameter} are the settings chosen before training that controls how the learning process works.\\
-\textbf{Train} fit params; \textbf{Val} tune hyperparams / pick model; \textbf{Test} use once $\to$ unbiased gen.\ error (tune on test $\to$ leakage, optimistic).\\
-Reg.\ vs class.\ decided by \emph{output} only (cont.\ vs discrete). $t$=target, $y$=pred; $x^{(i)}_j$: ex.\ $i$, feat.\ $j$.\\
-100\% train acc $\not\Rightarrow$ good test; May overfit. Data augmentation: changing the training data by a little bit to create new training data (shift/rotate).\\
+\textbf{Train}: fit parameters.\\
+\textbf{Val}: tune hyperparameters / pick model.\\
+\textbf{Test}: \sub{When} use once after model \& hyperparameters are chosen. \sub{Purpose} get an unbiased estimate of generalization error. \sub{If used for tuning} test info leaks into model selection, so the test error becomes optimistically biased.\\
+Regression vs classification is decided by the \emph{output} only (continuous vs discrete).\\
+$t$ = target, $y$ = prediction; $x^{(i)}_j$ = feature $j$ of example $i$.\\
+100\% training accuracy $\not\Rightarrow$ good test accuracy; May overfit.\\
+Data augmentation: changing the training data by a little bit to create new training data (shift/rotate).\\
 \textbf{Parametric models} fix the parameter count. Non-parametric models don't. $\mathcal{O}(1)$ space complexity with respect to the feature count, and never $\Omega(N)$. Hyperparameters are out of this scope.
 
 \subsection{KNN}
-For 1NN: Find $t^{(c)}$ that corresponds to:
+\textbf{1NN}: predict $t^{(c)}$, where
 \[ \vec{x}^{(c)} = \arg\min_{\vec{x}^{(i)}\in\text{training set}} \operatorname{distance}\left(\vec{x}^{(i)},\, \vec{x}\right) \]
-For kNN, for the top $k$ other datapoints closest to $\vx$, choose the majority class.\\
-{\scriptsize Distances ($\mathbf a,\mathbf b\in\mathbb R^d$):\\
+\textbf{kNN}: predict using the majority class among the $k$ closest training examples to $\vx$.\\
+{\fontsize{4}{4.7}\selectfont \textbf{Distances}:\\
 \begin{minipage}[t]{0.5\linewidth}
-$L_2$: $\sqrt{\sum_j (a_j-b_j)^2}$\\[1pt]
-$L_p$: $\big(\sum_j |a_j-b_j|^p\big)^{1/p}$
+\textbf{$L_2$}: $\sqrt{\sum_j (a_j-b_j)^2}$\\[1pt]
+\textbf{$L_p$}: $\big(\sum_j |a_j-b_j|^p\big)^{1/p}$
 \end{minipage}\vrule\hspace{2pt}
 \begin{minipage}[t]{0.47\linewidth}
-Cos: $\frac{\mathbf a\cdot\mathbf b}{\|\mathbf a\|_2\|\mathbf b\|_2}$\\[1pt]
-$L_\infty$: $\max_j |a_j-b_j|$
+\textbf{Cos}: $\frac{\mathbf a\cdot\mathbf b}{\|\mathbf a\|_2\|\mathbf b\|_2}$\\[1pt]
+\textbf{$L_\infty$}: $\max_j |a_j-b_j|$
 \end{minipage}}\\
-Normalize features to mean $=0$ and var $=1$:
+\textbf{Cos}: ignores vector length, only direction $\to$ good for text.\\
+\textbf{Normalize}: features to mean $=0$ and variance $=1$,
 \[ x_{\text{norm}} = \frac{x-\mu}{\sigma} \]
-$\mu_j,\sigma_j$ from training set only; Reuse for val/test (else leakage).\\
-\textbf{Pros}: simple; No training; Works for reg.\ and class.; Adapts easily to new data.\\
-\textbf{Cons}: \textbf{curse of dimensionality}: in high dims most points are far apart from each other ($L_\infty$ on $[0,1]^d$: frac.\ within $\epsilon$ of origin $=\epsilon^d$; $\because\epsilon<1$, $d\uparrow\Rightarrow\epsilon^d\to0$); Sensitive to ranges of features (larger range dominates distance calculations); Slow prediction: distance to all $N$ pts, $O(ND)$ per query; Must store entire training set, $O(ND)$ space.\\
-\textbf{Choose $k$}\\
-$k\uparrow\ \to$ boundary smoother, less sensitive to individual pts $\to$ underfit; $k=N\to$ always majority class.\\
-$k=1\to$ sharp, overfit; 100\% train acc (unless dup.\ $\vx$ w/ diff.\ labels). No single best $k$, depends on $N$; Heuristic $k<\sqrt N$ ($k\to\infty$, $k/N\to0$). Pick $k$ (any hyperparam) via val set or cross-val.\\
-\textbf{Workflow}: (1) Split into train/val/test; (2) For each $K$, train KNN on train; (3) Compute acc of each on val; (4) Select $K$ w/ best val acc; (5) Compute acc of that $K$ on test.\\
-Cos: direction $>$ magnitude (text). Curse: need exp.\ more data; Nearest $\approx$ farthest dist.; Large $k$ doesn't fix.
+\sub{Rule} compute $\mu_j,\sigma_j$ from the training set only; Reuse them for validation/test (else leakage).\\
+\textbf{Boundary} (1NN):\\
+\sub{Euclidean} (1) for nearby pairs of \emph{different} classes draw the perpendicular bisector $(\mathbf b-\mathbf a)^T\vx=\frac{\|\mathbf b\|^2-\|\mathbf a\|^2}{2}$; (2) cut bisectors at Voronoi vertices (points equidistant to 3 training points); (3) keep only edges separating different classes; (4) check with a test point.\\
+\sub{Manhattan} bisector of 2 points depends on their bounding box: wide ($|\Delta x_1|>|\Delta x_2|$) $\to$ $45^\circ$ segment inside the box, then vertical rays; Tall $\to$ $45^\circ$ segment, then horizontal rays; Square $\to$ diagonal + 2-D tie regions (state the tie-breaking rule).\\
+\sub{Cosine} only the angle matters $\to$ regions are wedges from the origin; Boundary = rays along angle bisectors of adjacent points of different classes.\\
+\textbf{Classify a point}: \sub{Steps} list $d^2$ to every training point (skip $\sqrt{}$, same order) $\to$ take the $k$ smallest $\to$ majority vote; Tie $\to$ use the stated tie rule. \sub{1NN says A, $k$NN says B} overlay both boundaries, pick a point strictly inside the overlap (on a boundary = tie).\\
+\textbf{Training accuracy} ($k$NN): \sub{Formula} $\tfrac{1}{N_{\text{train}}}\sum_{i}\ind[y(\vx^{(i)})=t^{(i)}]$. \sub{Rule} each training point is its own nearest neighbour ($d=0$) $\to$ its vote = its own label + its $k\!-\!1$ nearest other points.
+\sub{Why 1NN = 100\%} the only neighbour is the point itself $\to$ always predicts its own label (unless duplicate $\vx$ with different labels).
+\sub{Why 3NN not} its own label is only 1 of 3 votes; The 2 nearest other points can outvote it if both have a different label.\\
+\textbf{Pros}: simple; No training; Works for regression and classification; Adapts easily to new data.\\
+\textbf{Cons}:\\
+(1) \textbf{Curse of dimensionality}: in high dimensions most points are far apart from each other ($L_\infty$ on $[0,1]^d$: fraction within $\epsilon$ of origin $=\epsilon^d$; $\because\epsilon<1$, $d\uparrow\Rightarrow\epsilon^d\to0$) $\to$ \sub{Sol} add more data or reduce dimensionality.\\
+(2) Sensitive to ranges of features (larger range dominates distance calculations) $\to$ \sub{Sol} normalization.\\
+(3) Slow prediction: distance to all $N$ points, $O(ND)$ per query.\\
+(4) Must store the entire training set, $O(ND)$ space.\\
+(5) Discrete features (e.g.\ Outlook $\in\{$Sunny, Overcast, Rain$\}$): values aren't numeric $\to$ no clear distance; Prefer DT.\\
+\textbf{Choose $k$}:\\
+$k\uparrow\ \to$ boundary smoother, less sensitive to individual points $\to$ underfit; $k=N\to$ always predicts the majority class.\\
+$k=1\to$ sharp boundary, overfit; 100\% training accuracy (unless duplicate $\vx$ with different labels).\\
+No single best $k$, depends on $N$; Heuristic $k<\sqrt N$ ($k\to\infty$, $k/N\to0$).\\
+Pick $k$ (any hyperparameter) via validation set or cross-validation.\\
+\textbf{Workflow}:\\
+(1) Split data into train/validation/test.\\
+(2) For each $K$: fit KNN on train.\\
+(3) Compute accuracy of each on validation.\\
+(4) Pick the $K$ with the best validation accuracy.\\
+(5) Report the test accuracy of that $K$.\\
 
 \section{Decision Trees}
-Large trees overfit, small trees underfit. For inference, trace the tree.\\
-\textbf{Entropy}
-\[ H(X) = -\textstyle\sum_{x\in X} p(x)\log_2 p(x) \]
-\textbf{Conditional Entropy}
-\[ H(X\mid Y\!=\!y) = -\textstyle\sum_{x} p(x\mid y)\log_2 p(x\mid y) \]
-\textbf{Expected conditional entropy}
-\[ H(X\mid Y) = \textstyle\sum_{y} p(y)\,H(X\mid Y\!=\!y) \]
-\textbf{Information gain}
-\[ IG(X\mid Y) = H(X) - H(X\mid Y) \]
-\textbf{Properties}: $H(X)\ge0$; $H(Y\mid X) \le H(Y)$ (i.e.\ $IG\ge0$); $Y, X$ are independent $\Rightarrow IG(Y\mid X) = 0$ (i.e.\ $H(Y\mid X)=H(Y)$); $Y$ fully determined by $X\Rightarrow H(Y\mid X)=0\Rightarrow IG(Y\mid X)=H(Y)$; Certain $\to H=0$; Binary max $H=1$ bit at $p=.5$.\\
+\textbf{Tree size}: large $\to$ overfit; Small $\to$ underfit.\\
+\textbf{Inference}: trace the tree from root to leaf.\\
+\textbf{Entropy}:
+\[ H(Y) = -\mathbb E_{Y\sim p(y)}\left[\log_2 p(Y)\right] = -\textstyle\sum_{y} p(y)\log_2 p(y) \]
+\textbf{Notation $H(p_1,\dots,p_n)$}: \sub{Def} entropy of a distribution whose probabilities are $p_1,\dots,p_n$ (arguments are numbers, $\sum_k p_k=1$): $H(p_1,\dots,p_n)=-\sum_k p_k\log_2 p_k$.\\
+\sub{Property} $H(\frac12,\frac12)=-2\cdot\frac12\log_2\frac12=1$ (max for 2 classes; 50/50 split = most uncertain).\\
+\textbf{Joint entropy}: \sub{Def} uncertainty of the pair $(X,Y)$ (arguments are random variables, not probabilities):
+\begin{align*}
+H(X,Y) &= -\mathbb E_{X,Y\sim p(x,y)}\left[\log_2 p(X,Y)\right]\\
+&= -\textstyle\sum_x\sum_y p(x,y)\log_2 p(x,y)
+\end{align*}
+\sub{Chain rule} $H(X,Y)=H(X)+H(Y\mid X)$; \sub{If independent} $H(X,Y)=H(X)+H(Y)$.\\
+\textbf{Conditional entropy}:
+\begin{align*}
+H(Y\mid X\!=\!x) &= -\mathbb E_{Y\sim p(y\mid x)}\left[\log_2 p(Y\mid x)\right]\\
+&= -\textstyle\sum_{y} p(y\mid x)\log_2 p(y\mid x)
+\end{align*}
+\textbf{Expected conditional entropy}:
+\begin{align*}
+H(Y\mid X) &= \mathbb E_{X\sim p(x)}\left[H(Y\mid X\!=\!x)\right]\\
+&= \textstyle\sum_{x} p(x)\,H(Y\mid X\!=\!x)\\
+&= -\mathbb E_{X,Y\sim p(x,y)}\left[\log_2 p(Y\mid X)\right]\\
+&= -\textstyle\sum_x\sum_y p(x,y)\log_2 p(y\mid x)
+\end{align*}
+\textbf{Information gain}:
+\[ IG(Y\mid X) = H(Y) - H(Y\mid X) \]
+$0\le IG(Y\mid X)\le H(Y)$, i.e.\ $IG(Y\mid X)\in[0,H(Y)]$.\\
+\textbf{IG table} ($Y$ = label/class, $X$ = split on a feature; count examples per split side \& class):\\
+{\fontsize{4}{4.7}\selectfont\setlength{\tabcolsep}{4pt}\begin{tabular}{@{}l|cc|c@{}}
+ & Class 1 & Class 2 & Total\\\hline
+Split cond.\ 1 & $a$ & $b$ & $a+b$\\
+Split cond.\ 2 & $c$ & $d$ & $c+d$\\\hline
+Total & $a+c$ & $b+d$ & $N$
+\end{tabular}}\\
+\[ H(Y)=H\big(\tfrac{a+c}{N},\tfrac{b+d}{N}\big) \]
+\[ H(Y\mid X)=\tfrac{a+b}{N}H\big(\tfrac{a}{a+b},\tfrac{b}{a+b}\big)+\tfrac{c+d}{N}H\big(\tfrac{c}{c+d},\tfrac{d}{c+d}\big) \]
+\textbf{Properties}:\\
+$H(Y)\ge0$; Certain outcome $\to H=0$; Binary: max $H=1$ bit at $p=0.5$.\\
+$H(Y\mid X) \le H(Y)$ (i.e.\ $IG\ge0$; $\because$ observing $X$ can't increase uncertainty about $Y$).\\
+$Y, X$ independent $\Rightarrow IG(Y\mid X) = 0$ (i.e.\ $H(Y\mid X)=H(Y)$).\\
+$Y$ fully determined by $X\Rightarrow H(Y\mid X)=0\Rightarrow IG(Y\mid X)=H(Y)$ (i.e.\ max $IG(Y\mid X)$).\\
 
 \subsection{Decision Tree Algorithm}
-Keep splitting until:
-\begin{itemize}
-  \item All examples have the same label.
-  \item When there are no features left.
-  \item When a depth limit is reached. (hyperparameter)
-  \item When the loss stops decreasing enough. (hyperparameter)
-  \item Node has $<$ min \#samples. (hyperparameter)
-\end{itemize}
-Split: pick max IG (not train error $\because$ ignores child uncertainty). Leaf $\to$ majority class.
-Greedy $\to$ not globally optimal ($\because$ NP-hard). Boundaries axis-aligned ($x_j\le\theta$). Continuous feat.: only $\le N\!-\!1$ thresholds (midpts between sorted values). Scale-invariant.
+\textbf{Stop splitting when}:\\
+(1) All examples have the same label $\to$ leaf = that label.\\
+(2) No features or split points left $\to$ leaf = majority class. \sub{When} examples with identical feature values but different labels; A real-valued feature has no split points once all its values in the node are equal.\\
+(3) No examples left $\to$ leaf = parent's majority class. \sub{When} a value of a multi-way split has no examples; Never happens if every feature-value combination appears in the data.\\
+(4) Max depth reached (hyperparameter).\\
+(5) Loss decreases too little (hyperparameter).\\
+(6) Node has fewer than a min number of samples (hyperparameter).\\
+\textbf{Split}: pick the split with max IG (not training error, $\because$ it ignores the uncertainty left in the child nodes).\\
+\textbf{Leaf prediction}: \sub{Class} majority vote; \sub{Reg} mean.\\
+\textbf{Properties}:\\
+Greedy $\to$ not globally optimal ($\because$ finding the optimal tree is NP-hard).\\
+Boundaries are axis-aligned (each split tests $x_j\le\theta$).\\
+Continuous feature: only $\le N\!-\!1$ thresholds to check (midpoints between sorted values).\\
+Scale-invariant.\\
+\textbf{Boundary}:\\
+(1) Each split $x_j\le\theta$ is a vertical/horizontal line, drawn only inside its parent node's region.\\
+(2) Leaves = axis-aligned rectangles.\\
+(3) Label each rectangle with its leaf's prediction (majority class).\\
+\textbf{Train cost vs KNN}: DT more ($\because$ compute IG of each split to choose the best feature \& threshold); KNN less (no computation, just stores data).\\
+\textbf{Pros} (vs KNN): handles discrete features directly (one branch per value, no distance needed).
 
 \section{Linear / GD}
-Loss function measures how off once training example is.\\
-Pred.: $y=\vw^T\vx+b$, $\mathbf y=X\vw$ ($X$: $N\times(D\!+\!1)$, row = example).\\
-\textbf{Closed form}: $\nabla=0\Rightarrow X^TX\vw=X^T\vt\Rightarrow\vw=(X^TX)^{-1}X^T\vt$.\\
-$\nabla$ = steepest ascent, $\perp$ contours $\to$ step along $-\nabla$. $\alpha$ too big $\to$ overshoot/diverge; Too small $\to$ slow.\\
-Feature map $\psi(\vx)$ (e.g.\ $[1,x,x^2]$) $\to$ nonlinear fit, still linear in $\vw$.\\
-Reg.\ $\cE+\lambda\mathcal R$: $\lambda$ small $\to$ overfit; Big $\to$ underfit.\\
-Cost functions sum up all.
-\[ \cL(y,t) = \tfrac{1}{2}(y-t)^2 \]
-\[ \cE(\vw) = \tfrac{1}{N}\textstyle\sum_{i=1}^N \cL\left(y^{(i)}, t^{(i)}\right) \]
-For the linear model $\mathbf{y} = W\vx$, the \textbf{cost} function is:
+\textbf{Setup}: $N$ = number of examples, $D$ = number of input features.\\
+\textbf{Dummy}: $x_0^{(i)}=1\Rightarrow b=w_0x_0^{(i)}$:\\
+$\vx^{(i)}=[1,x_1^{(i)},\dots,x_D^{(i)}]^T\in\mathbb R^{(D+1)\times1}$\\
+$\vw=[w_0,\dots,w_D]^T\in\mathbb R^{(D+1)\times1}$\\
+$y^{(i)}=\vw^T\vx^{(i)}\ (=\vx^{(i)T}\vw)=\sum_{j=0}^D x^{(i)}_jw_j\in\mathbb R$\\
+$X=\begin{bmatrix}(\vx^{(1)})^T\\[-2pt]\vdots\\[-2pt](\vx^{(N)})^T\end{bmatrix}\in\mathbb R^{N\times(D+1)}$ (row = example)\\
+$\vt,\mathbf y\in\mathbb R^{N\times1}$, $\mathbf y=X\vw$\\
+\textbf{Prediction}: $y=\vw^T\vx+b$, $\mathbf y=X\vw$ ($X\in\mathbb R^{N\times(D+1)}$, row = example).\\
+\textbf{Gradient direction}: $\nabla$ = direction of steepest ascent, perpendicular to contours $\to$ GD steps along $-\nabla$.\\
+\textbf{Feature map}: $\psi(\vx)$ (e.g.\ $[1,x,x^2]$) $\to$ fits nonlinear functions of $x$, model still linear in $\vw$.\\
+\textbf{Train/val error vs complexity}: \sub{Train} $\downarrow$ as complexity $\uparrow$; \sub{Val} $\downarrow$ then $\uparrow$ (U-shape).\\
+\sub{Underfit} low complexity: both high, small gap, both still $\downarrow$ $\to$ increase complexity.\\
+\sub{Overfit} high complexity: train $\downarrow$ (to 0), val $\uparrow$, gap large \& growing $\to$ fits noise.\\
+\sub{Good fit} val at its min, moderate gap $\to$ best bias--variance trade-off; Choose this complexity.\\
+\textbf{Cost function}: $\cE(\vw) = \tfrac{1}{N}\sum_{i=1}^N \cL\big(y^{(i)}, t^{(i)}\big)$\\
+\textbf{Loss function}: $\cL(y,t) = \tfrac{1}{2}(y-t)^2$\\
+Loss = how off one single example is; Cost = average over a set of examples.\\
+\textbf{Linear cost}:
 \begin{align*}
-\cE(\vw) &= \frac{1}{2N}\sum_{i=1}^N\left(\vw^T\vx - t^{(i)}\right)^2\\
+\cE(\vw) &= \frac{1}{2N}\sum_{i=1}^N\left(\vw^T\vx^{(i)} - t^{(i)}\right)^2\\
 \cE(\vw) &= \frac{1}{2N}(X\vw-\vt)^T(X\vw-\vt)
 \end{align*}
 
 \subsection{Gradient of the Cost Function}
-\textbf{Setup}: $N$ = \#examples, $D$ = \#input features.\\
-Dummy $x_0^{(i)}=1\Rightarrow b=w_0x_0^{(i)}$:\\
-$\vx^{(i)}=[1,x_1^{(i)},\dots,x_D^{(i)}]^T\in\mathbb R^{(D+1)\times1}$\\
-$\vw=[w_0,\dots,w_D]^T\in\mathbb R^{(D+1)\times1}$\\
-$y^{(i)}=\vw^T\vx^{(i)}\in\mathbb R$\\
-$X=\begin{bmatrix}(\vx^{(1)})^T\\[-2pt]\vdots\\[-2pt](\vx^{(N)})^T\end{bmatrix}\in\mathbb R^{N\times(D+1)}$ (row = example)\\
-$\vt,\mathbf y\in\mathbb R^{N\times1}$, $\mathbf y=X\vw$\\
-\textbf{Cost}: loss = single example; Cost = average over a set of examples.\\
 $\cL(y^{(i)},t^{(i)})=\frac12(y^{(i)}-t^{(i)})^2\in\mathbb R$\\
 $\cE(\vw)=\frac1N\sum_i\cL\in\mathbb R$\\
 Let $\mathbf e=\mathbf y-\vt\in\mathbb R^{N\times1}$: $\mathbf e^T\mathbf e=\sum_i(y^{(i)}-t^{(i)})^2$
@@ -135,157 +213,270 @@ Let $r^{(i)}=\vw^T\vx^{(i)}-t^{(i)}\in\mathbb R$, $\vr=X\vw-\vt\in\mathbb R^{N\t
 \textbf{KEY}: $\sum_i r^{(i)}\vx^{(i)}=X^T\vr$\\
 ($\because$ columns of $X^T$ are $\vx^{(i)}$, weighted by $r^{(i)}$)\\
 \textbf{Solve}:\\
-(1) Direct: $\nabla\cE=0\Rightarrow X^TX\vw=X^T\vt$\\
+\textbf{(1) Direct} (\textbf{closed form}): $\nabla\cE=0\Rightarrow X^TX\vw=X^T\vt$\\
 $\Rightarrow\vw=(X^TX)^{-1}X^T\vt$\\
-\ \ \textit{Pro}: closed form, exact \& provably optimal, no iteration.\\
-\ \ \textit{Con}: CFS may not exist for most problems; Can't generalize to most models; Computationally expensive; $(X^TX)^{-1}$ is $O(D^3)$.\\
-(2) GD: $\underbrace{\vw}_{(D+1)\times1}\leftarrow\vw-\frac{\alpha}{N}\underbrace{X^T(X\vw-\vt)}_{(D+1)\times1}$\\
-The regularizer:
-\[ \tfrac{\lambda}{2}\textstyle\sum_{j=0}^D w_j^2 \]
-The gradient of the regularizer:
+\ \ \textbf{Pros}: closed form, exact \& provably optimal, no iteration.\\
+\ \ \textbf{Cons}: closed-form solution may not exist for most problems; Can't generalize to most models; Computationally expensive: $(X^TX)^{-1}$ is $O(D^3)$.\\
+\begin{minipage}{\linewidth}
+\textbf{(2) GD update}:\\
+\sub{Non-vectorized} $w_j\leftarrow w_j-\frac{\alpha}{N}\sum_{i=1}^N(\vw^T\vx^{(i)}-t^{(i)})x_j^{(i)}$\\
+\sub{Vectorized} $\underbrace{\vw}_{\in\mathbb R^{(D+1)\times1}}\leftarrow\vw-\frac{\alpha}{N}\underbrace{X^T(X\vw-\vt)}_{\in\mathbb R^{(D+1)\times1}}$
+\end{minipage}\\
+\textbf{Learning rate} $\alpha$: too big $\to$ overshoot/diverge; Too small $\to$ converges slowly.\\
+\textbf{Large Weight}: \sub{Why problematic} one feature contributes a lot to the prediction, but a good prediction uses many features $\to$ sign of overfitting.\\
+\textbf{Regularization}:\\
+\sub{Def} modify training to choose models using criteria beyond training error, i.e.\ minimize $\cE+\lambda\mathcal R$ (penalize large $\vw$).\\
+\sub{Effect of $\lambda$} small $\to$ overfit; Big $\to$ underfit.\\
+\sub{Not} forcing weights to similar scale; Not guaranteeing 0 training error; Adds (not removes) hyperparameter $\lambda$.\\
+\textbf{L2 regularization}: $\mathcal R=\tfrac12\textstyle\sum_{j=0}^D w_j^2$\\
+\textbf{$\nabla$ regularizer}:
 \begin{gather*}
 \frac{\partial}{\partial w_j}\left(\frac{\lambda}{2}\sum_{j=0}^D w_j^2\right) = \lambda w_j\\
 \nabla_{\vw}\left(\frac{\lambda}{2}\vw^T\vw\right) = \lambda\vw
 \end{gather*}
-In the event the bias term is left in:
+\textbf{Gradient} (regularized):\\
+$\frac{\partial\cE}{\partial w_j}=\frac1N\sum_{i=1}^N(\vw^T\vx^{(i)}-t^{(i)})x_j^{(i)}+\lambda w_j$\\
+$\nabla_\vw\cE=\frac1NX^T(X\vw-\vt)+\lambda\vw\in\mathbb R^{D+1}$\\
+\textbf{GD update} (regularized):\\
+\sub{Non-vectorized} $w_j\leftarrow w_j-\alpha\big(\frac1N\sum_{i=1}^N(\vw^T\vx^{(i)}-t^{(i)})x_j^{(i)}+\lambda w_j\big)$\\
+\sub{Vectorized} $\vw\leftarrow\vw-\alpha\big(\frac1NX^T(X\vw-\vt)+\lambda\vw\big)$\\
+\textbf{Direct} (regularized): \sub{Steps} set $\nabla_\vw\cE=\mathbf 0$, multiply by $N$, write $\vw=I\vw$ ($I\in\mathbb R^{(D+1)\times(D+1)}$):
 \begin{align*}
-\cE(\vw) &= \frac{1}{2N}(X\vw+b-\vt)^T(X\vw+b-\vt)\\
-\nabla_{\vw}\cE(\vw) &= \frac{1}{N}X^T(X\vw+b-\vt)\\
-\frac{\partial\cE(\vw)}{\partial w_j} &= \frac{1}{N}\sum_{i=1}^N\left(\vw^T\vx^{(i)}+b-t^{(i)}\right)x_j^{(i)}\\
-\frac{\partial\cE(\vw)}{\partial b} &= \frac{1}{N}(X\vw+b-\vt)
+X^TX\vw+N\lambda\vw&=X^T\vt\\
+(X^TX+N\lambda I)\vw&=X^T\vt\\
+\vw&=(X^TX+N\lambda I)^{-1}X^T\vt
 \end{align*}
+\sub{Why $I$} $X^TX+N\lambda$ (matrix + scalar) is undefined, so factor $\vw$ out as $I\vw$.\\
+\textbf{L1 regularization}: $\mathcal R=\textstyle\sum_{j=0}^D|w_j|$\\
+\sub{Effect} drives many $w_j$ exactly to 0 $\to$ sparse $\vw$ (feature selection); L2 only shrinks $w_j$ toward 0.\\
+\textbf{$\nabla$ regularizer}: $\frac{\partial}{\partial w_j}\big(\lambda\sum_j|w_j|\big)=\lambda\,\operatorname{sgn}(w_j)$ (not differentiable at $w_j=0$); $\nabla_\vw=\lambda\,\operatorname{sgn}(\vw)$\\
+\textbf{Gradient} (L1):\\
+$\frac{\partial\cE}{\partial w_j}=\frac1N\sum_{i=1}^N(\vw^T\vx^{(i)}-t^{(i)})x_j^{(i)}+\lambda\,\operatorname{sgn}(w_j)$\\
+$\nabla_\vw\cE=\frac1NX^T(X\vw-\vt)+\lambda\,\operatorname{sgn}(\vw)\in\mathbb R^{D+1}$\\
+\textbf{GD update} (L1):\\
+\sub{Non-vectorized} $w_j\leftarrow w_j-\alpha\big(\frac1N\sum_{i=1}^N(\vw^T\vx^{(i)}-t^{(i)})x_j^{(i)}+\lambda\,\operatorname{sgn}(w_j)\big)$\\
+\sub{Vectorized} $\vw\leftarrow\vw-\alpha\big(\frac1NX^T(X\vw-\vt)+\lambda\,\operatorname{sgn}(\vw)\big)$\\
+\sub{Direct} no closed form.\\
+\textbf{With bias term}:
+\begin{align*}
+\cE(\vw) &= \frac{1}{2N}(X\vw+b\mathbf 1-\vt)^T(X\vw+b\mathbf 1-\vt)\\
+\nabla_{\vw}\cE(\vw) &= \frac{1}{N}X^T(X\vw+b\mathbf 1-\vt)\\
+\frac{\partial\cE(\vw)}{\partial w_j} &= \frac{1}{N}\sum_{i=1}^N\left(\vw^T\vx^{(i)}+b-t^{(i)}\right)x_j^{(i)}\\
+\frac{\partial\cE(\vw)}{\partial b} &= \frac{1}{N}\sum_{i=1}^N\left(\vw^T\vx^{(i)}+b-t^{(i)}\right)\\
+&= \frac{1}{N}\mathbf 1^T(X\vw+b\mathbf 1-\vt)
+\end{align*}
+\textbf{GD update} (with bias):\\
+\sub{Non-vectorized} $w_j\leftarrow w_j-\frac{\alpha}{N}\sum_{i=1}^N(\vw^T\vx^{(i)}+b-t^{(i)})x_j^{(i)}$,\\
+$b\leftarrow b-\frac{\alpha}{N}\sum_{i=1}^N(\vw^T\vx^{(i)}+b-t^{(i)})$\\
+\sub{Vectorized} $\vw\leftarrow\vw-\frac{\alpha}{N}X^T(X\vw+b\mathbf 1-\vt)$,\\
+$b\leftarrow b-\frac{\alpha}{N}\mathbf 1^T(X\vw+b\mathbf 1-\vt)$\\
+\textbf{Direct} (with bias, 1 feature, $y=wx+b$): \sub{Steps} set $\frac{\partial\cE}{\partial w}=0$ and $\frac{\partial\cE}{\partial b}=0$ $\to$ 2 linear equations in $w,b$ $\to$ plug in the data points:
+\[ \tfrac1N\textstyle\sum_i(wx^{(i)}+b-t^{(i)})x^{(i)}=0,\quad \tfrac1N\sum_i(wx^{(i)}+b-t^{(i)})=0 \]
+\begin{minipage}{\linewidth}
+\textbf{Normal eq for 1 feat}: \sub{Equations} multiply the 2 Direct (with bias) equations by $N$, expand ($\sum=\sum_{i=1}^N$):
+\begin{align*}
+w\textstyle\sum(x^{(i)})^2+b\sum x^{(i)}&=\textstyle\sum x^{(i)}t^{(i)}\\
+w\textstyle\sum x^{(i)}+bN&=\textstyle\sum t^{(i)}
+\end{align*}
+\sub{Matrix form} same as $X^TX\vw=X^T\vt$ with row $i$ of $X$ = $[x^{(i)},1]$:
+\[ \begin{bmatrix}\sum(x^{(i)})^2&\sum x^{(i)}\\\sum x^{(i)}&N\end{bmatrix}\begin{bmatrix}w\\b\end{bmatrix}=\begin{bmatrix}\sum x^{(i)}t^{(i)}\\\sum t^{(i)}\end{bmatrix} \]
+\sub{Solution}
+\begin{gather*}
+w=\frac{N\sum x^{(i)}t^{(i)}-\sum x^{(i)}\sum t^{(i)}}{N\sum(x^{(i)})^2-\left(\sum x^{(i)}\right)^2}\\
+b=\frac{\sum t^{(i)}-w\sum x^{(i)}}{N}=\bar t-w\bar x
+\end{gather*}
+($\bar x,\bar t$ = means of $x^{(i)},t^{(i)}$)
+\end{minipage}
 
 \subsection{Stochastic GD}
-Batch GD is what GD normally does. It can be slow.\\
-Stochastic GD just randomly picks a training example. It can be very noisy. Where $i$ at random,
-\[ \vw \leftarrow \vw - \alpha\tfrac{\partial\cL}{\partial\vw} \]
-Mini-batch GD falls in-between.\\
-Batch size can be tuned as a hyperparameter\\
-\textbf{Iteration}: 1 weight update from 1 mini-batch of $B$. \textbf{Epoch}: every example used once ($=N/B$ iterations).\\
-{\scriptsize\setlength{\tabcolsep}{2pt}\begin{tabular}{@{}llll@{}}
+\textbf{SGD update} ($i$ random, 1 example $\Rightarrow$ no $\frac1N\sum_i$): $\vw\leftarrow\vw-\alpha\nabla_\vw\cL^{(i)}$; For LinReg:\\
+\sub{Non-vectorized} $w_j\leftarrow w_j-\alpha(\vw^T\vx^{(i)}-t^{(i)})x_j^{(i)}$\\
+\sub{Vectorized} $\vw\leftarrow\vw-\alpha(\vw^T\vx^{(i)}-t^{(i)})\vx^{(i)}$\\
+\textbf{Iteration} \sub{Def}: a single update step in the optimization algorithm. In SGD, one iteration = processing one mini-batch and updating the parameters once.\\
+\textbf{Epoch} \sub{Def}: one complete pass through the entire training dataset. In SGD, one epoch = processing all mini-batches exactly once.\\
+{\fontsize{4}{4.7}\selectfont\setlength{\tabcolsep}{2pt}\begin{tabularx}{\linewidth}{@{}l*{3}{>{\raggedright\arraybackslash}X}@{}}
  & Batch & Mini-batch & SGD\\\hline
-\#ex/update & all $N$ & $B$, $1\!<\!B\!<\!N$ & 1\\
-Acc of grad & exact & noisy ($\downarrow$ as $B\uparrow$) & noisiest\\
-Cost/update & $O(N)$ & $O(B)$ & $O(1)$\\
-Vectorize & high (mem?) & high, fit hw & low
-\end{tabular}}\\
-Mini-batch grad = unbiased est.; SGD noise $\to$ escape plateaus (no global-opt guarantee).
-Ravine: very diff.\ grad magnitudes per dim $\to$ oscillate; Fix: normalize features.
+\#examples/update & all $N$ & $B$, $1\!<\!B\!<\!N$ & 1\\
+Gradient accuracy & exact & noisy ($\downarrow$ as $B\uparrow$) & noisiest\\
+Cost/update & grows with $N$ & grows with $B$ & 1 example\\
+Vectorization & High, but the full dataset may not fit in memory & High, and $B$ can be chosen to fit the hardware & Low, one example at a time
+\end{tabularx}}\\
+\textbf{Mini-batch gradient}: unbiased estimate of the full gradient.\\
+\textbf{SGD Pros}: noisy gradient $\to$ can escape flat regions (e.g.\ plateaus); No guarantee of reaching the global optimum.\\
+\textbf{Ravine}:\\
+\sub{Def} cost is steep in some dimensions, flat in others (gradient magnitudes differ a lot across dimensions).\\
+\sub{Effect} GD oscillates in steep dimensions, moves slowly in flat dimensions.\\
+\sub{Cause} features on very different scales.\\
+\sub{Fix} normalize features.
 
 \subsection{Vectorizing Tips}
-Where $X$ is $N\times D$ and all other variables can have their shape inferred:\\
-\textbf{Dot product}
-\[ \textstyle\sum_{i=1}^N u_i v_i = \vu^T\vv \]
-\textbf{Hadamard product}
+$X\in\mathbb R^{N\times D}$; Other variables' shapes are inferred.\\
+\textbf{Answer format}: vectors are columns; For every new symbol state its dimension and define its components (e.g.\ $X\in\mathbb R^{P\times Q}$, row $i$ = $\mathbf x_i^T$).\\
+\textbf{Dot product}:
+\[ \textstyle\sum_{i=1}^N u_i v_i = \vu^T\vv = \vv^T\vu \]
+\textbf{Hadamard product}:
 \[ \vu\odot\vv = \operatorname{diag}(\vu)\,\vv = \left(\vu^T\operatorname{diag}(\vv)\right)^T \]
-\textbf{Sum a vector}
+\textbf{Sum a vector}:
 \[ \vu^T\mathbf{1} = \textstyle\sum_{i=1}^N u_i \]
-\textbf{Summing a matrix on axis 1} -- horizontal squish $>\!-\!<$ (shape $N$)
+\textbf{Sum axis 1}: horizontal squish $>\!-\!<$ ($X\mathbf 1\in\mathbb R^{N\times1}$)
 \[ X\mathbf{1} \]
-\textbf{Summing a matrix on axis 0} -- vertical squish $\downarrow$ (shape $D$)
+\textbf{Sum axis 0}: vertical squish $\downarrow$ ($\mathbf 1^TX\in\mathbb R^{1\times D}$)
 \[ \mathbf{1}^T X \]
-\textit{This is a column vector, and you may need to transpose it.}\\
-\textbf{Row-wise multiplication}
-\[ \operatorname{diag}(\vu)X = \begin{bmatrix} - & u_1\vx^{(1)} & - \\ - & u_i\vx^{(i)} & - \\ - & u_N\vx^{(N)} & - \end{bmatrix} \]
-\textbf{Column-wise multiplication}
-\[ X\cdot\operatorname{diag}(\vv) = \begin{bmatrix} | & | & | \\ v_1\vx_1 & v_2\vx_2 & v_3\vx_3 \\ | & | & | \end{bmatrix} \]
-\textbf{Tip:} in a chain of matrix multiplications, the \textbf{height} of the leftmost matrix will be the height of the output. E.g.\ for $X^T\vr$, output is $D\times 1$.
-\[ \textstyle\sum_{i=1}^N r^{(i)}\vx^{(i)} = X^T\vr \]
-\textbf{Shape reasoning:} the summed index ($N$) must become the \emph{inner} dimension and cancel; The dimension that appears first in the result goes on the left.\\
-\textbf{Stack predictions:} $(X\vw)_i = \vw^T\vx^{(i)}$, so $X\vw\in\mathbb{R}^{N\times 1}$ stacks all predictions.\\
-\textbf{Scalar with vector} ($s\in\mathbb{R}$)
+May need to transpose.\\
+\textbf{Weighted sum axis 1}: weighted horizontal squish ($M\in\mathbb R^{P\times Q}$, column $j$ = $\mathbf m_j\in\mathbb R^{P\times1}$, weights $\vu\in\mathbb R^{Q\times1}$)
+\[ \textstyle\sum_{j=1}^Q u_j\mathbf m_j = M\vu\in\mathbb R^{P\times1} \]
+\textbf{Weighted sum axis 0}: weighted vertical squish ($M\in\mathbb R^{P\times Q}$, row $i$ = $\mathbf m_i^T$, $\mathbf m_i\in\mathbb R^{Q\times1}$, weights $\vu\in\mathbb R^{P\times1}$)
+\[ \textstyle\sum_{i=1}^P u_i\mathbf m_i^T = \vu^TM\in\mathbb R^{1\times Q} \]
+Transpose of above (column form):
+\[ \textstyle\sum_{i=1}^P u_i\mathbf m_i = M^T\vu\in\mathbb R^{Q\times1} \]
+\textbf{Row-wise multiplication} ($M\in\mathbb R^{P\times Q}$, row $i$ = $\mathbf m_i^T$, $\mathbf m_i\in\mathbb R^{Q\times1}$; $\vu\in\mathbb R^{P\times1}$):
+\[ \operatorname{diag}(\vu)M = \begin{bmatrix} - & u_1\mathbf m_1^T & - \\ - & u_i\mathbf m_i^T & - \\ - & u_P\mathbf m_P^T & - \end{bmatrix}\in\mathbb R^{P\times Q} \]
+\textbf{Column-wise multiplication} ($M\in\mathbb R^{P\times Q}$, column $j$ = $\mathbf m_j\in\mathbb R^{P\times1}$; $\vv\in\mathbb R^{Q\times1}$):
+\[ M\operatorname{diag}(\vv) = \begin{bmatrix} | & | & | \\ v_1\mathbf m_1 & v_j\mathbf m_j & v_Q\mathbf m_Q \\ | & | & | \end{bmatrix}\in\mathbb R^{P\times Q} \]
+\textbf{Shape reasoning}: the summed index ($N$) must be the \emph{inner} dimension so it cancels; The first dimension of the result goes on the left.\\
+\textbf{Scalar with vector} ($s\in\mathbb{R}$):
 \begin{gather*} \alpha_i = u_i + s \Rightarrow \boldsymbol{\alpha} = \vu + s\mathbf{1}\\ \beta_i = s u_i \Rightarrow \boldsymbol{\beta} = s\vu \end{gather*}
-\textbf{Outer product}
-\[ M_{ij} = u_i v_j \Rightarrow M = \vu\vv^T \quad (P\times Q) \]
-Inner product $\to$ scalar; Element-wise $\to$ vector; Outer $\to$ matrix.\\
-\textbf{Weighted sum of vectors} ($M$ rows $\mathbf{m}_i^T$ vs.\ columns $\mathbf{m}_j$)
-\begin{gather*} \textstyle\sum_i u_i\mathbf{m}_i = M^T\vu \ (\text{rows})\\ \textstyle\sum_j u_j\mathbf{m}_j = M\vu \ (\text{cols}) \end{gather*}
-\textbf{Stack of dot products} ($M$ rows $\mathbf{m}_i^T$)
-\[ \alpha_i = \mathbf{m}_i^T\vu \Rightarrow \boldsymbol{\alpha} = M\vu \]
-\textbf{Two weights per term}
-\[ \textstyle\sum_i u_i v_i\mathbf{m}_i = M^T(\vu\odot\vv) = M^T\operatorname{diag}(\vu)\vv \]
-\textbf{Double sums}
+\textbf{Outer product}:
+\[ M_{ij} = u_i v_j \Rightarrow M = \vu\vv^T \in\mathbb R^{P\times Q} \]
+\textbf{Output type}: inner product $\to$ scalar; Element-wise $\to$ vector; Outer $\to$ matrix.\\
+\textbf{Stack of dot products} ($M\in\mathbb R^{P\times Q}$, row $i$ = $\mathbf m_i^T$; $\vu\in\mathbb R^{Q\times1}$):
+\[ \alpha_i = \mathbf{m}_i^T\vu \Rightarrow \boldsymbol{\alpha} = M\vu\in\mathbb R^{P\times1} \]
+\textbf{Two weights per term} ($M\in\mathbb R^{P\times Q}$, row $i$ = $\mathbf m_i^T$; $\vu,\vv\in\mathbb R^{P\times1}$):
+\[ \textstyle\sum_i u_i v_i\mathbf{m}_i = M^T(\vu\odot\vv) = M^T\operatorname{diag}(\vu)\vv\in\mathbb R^{Q\times1} \]
+\textbf{Double sums}:
 \begin{gather*}
 \textstyle\sum_i\sum_j u_i v_j m_{ij} = \vu^T M\vv\\ \textstyle\sum_i\sum_j u_i v_j m_{ij}^2 = \vu^T(M\odot M)\vv\\
 \textstyle\sum_i\sum_k u_i m_{ik} u_k = \vu^T M\vu
 \end{gather*}
-\textbf{Pitfall:} $\mathbf{a}\odot\mathbf{b} \ne \mathbf{a}\operatorname{diag}(\mathbf{b})$ --- $(P\times 1)(P\times P)$ is undefined; Use $\operatorname{diag}(\mathbf{b})\mathbf{a}$.\\
-\textbf{Pitfall:} $\frac1N(X\vw-\vt)^T X$ is a $1\times(D+1)$ \emph{row} vector; The gradient must be a column $\Rightarrow \frac1N X^T(X\vw-\vt)$.\\
-\textbf{Variants of LR gradient} ($\vr = X\vw-\vt$)
+\textbf{Pitfall}: $\mathbf{a}\odot\mathbf{b} \ne \mathbf{a}\operatorname{diag}(\mathbf{b})$ --- $\mathbf a\in\mathbb R^{P\times1}$ times $\operatorname{diag}(\mathbf b)\in\mathbb R^{P\times P}$ is undefined; Use $\operatorname{diag}(\mathbf{b})\mathbf{a}$.\\
+\textbf{Pitfall}: $\frac1N(X\vw-\vt)^T X\in\mathbb R^{1\times(D+1)}$ is a \emph{row}; Gradient must be a column $\Rightarrow \frac1N X^T(X\vw-\vt)$.\\
+\textbf{Variants of linear regression gradient} ($\vr = X\vw-\vt$):
 \begin{itemize}
   \item Per-weight $\lambda_j$: $\frac1N X^T\vr + \boldsymbol{\lambda}\odot\vw = \frac1N X^T\vr + \operatorname{diag}(\boldsymbol{\lambda})\vw$
   \item Per-example weight $\alpha_i$: $\sum_i \alpha_i r^{(i)}\vx^{(i)} = X^T\operatorname{diag}(\mathbf{a})\vr$
   \item \raggedright Per-feature scale $\alpha_j$: predictions $X\operatorname{diag}(\boldsymbol{\alpha})\vw$, gradient gains a $\operatorname{diag}(\boldsymbol{\alpha})$ on the left: $\frac1N\operatorname{diag}(\boldsymbol{\alpha})X^T\vr'$, $\vr' = X\operatorname{diag}(\boldsymbol{\alpha})\vw-\vt$
 \end{itemize}
-\textbf{Absorb bias:} $\vw_1^T\vx_1 + b = \vw_2^T\vx_2$ with $\vw_2 = \begin{bmatrix} b\\ \vw_1\end{bmatrix}$, $\vx_2 = \begin{bmatrix} 1\\ \vx_1\end{bmatrix}$ (both $(D+1)\times 1$).
+\textbf{Absorb bias}: $\vw_1^T\vx_1 + b = \vw_2^T\vx_2$ with $\vw_2 = \begin{bmatrix} b\\ \vw_1\end{bmatrix}$, $\vx_2 = \begin{bmatrix} 1\\ \vx_1\end{bmatrix}$ ($\vw_2,\vx_2\in\mathbb R^{(D+1)\times1}$).\\
+\textbf{Quadratic form gradient}:
+\[ \nabla_\vw\|A\vw-\vt\|^2=2A^T(A\vw-\vt) \]
 
 \section{Logistic Regression}
-$y=\sigma(\vw^T\vx)=p(t=1\mid\vx)$, threshold $0.5$. vs kNN: fixed $\vw$ $\to$ fast $O(D)$ pred.\\
-Linear model is:
+\textbf{Output}: $y=\sigma(\vw^T\vx)=p(t=1\mid\vx)$, threshold $0.5$.\\
+\textbf{Linear model}:
 \[ z = \vw^T\vx \]
-Prediction is:
+\textbf{Prediction}:
 \[ y = \begin{cases} 1 & z\ge 0\\ 0 & z<0 \end{cases} \]
-For which the loss functions are:
+\textbf{Loss functions}:
 \begin{itemize}
-  \item Zero-One Loss: $L_{0-1}(y,t) = \ind[y\ne t]$
+  \item \textbf{Zero-One Loss}: $L_{0-1}(y,t) = \ind[y\ne t]$
   \begin{itemize}
-    \item Non-differentiable / zero gradients (cannot update weights).
+    \item Non-differentiable / zero gradient $\to$ can't update $\vw$.
   \end{itemize}
-  \item Squared Error Loss: $L_{SE}(z,t) = \frac{1}{2}(z-t)^2$
+  \item \textbf{Squared Error Loss}: $L_{SE}(z,t) = \frac{1}{2}(z-t)^2$
   \begin{itemize}
     \item Penalizes confident correct predictions.
   \end{itemize}
-  \item Sigmoid + Squared Error:\\
+  \item \textbf{Sigmoid + Squared Error}:\\
   $y = \sigma(z) = \frac{1}{1+e^{-z}}$, $L_{SE}(y,t) = \frac{1}{2}(y-t)^2$
   \begin{itemize}
-    \item Suffers from vanishing gradients (when predictions are extremely wrong).
+    \item When the prediction is very wrong $\to$ $\sigma$ saturates $\to$ the gradient is close to 0.
   \end{itemize}
-  \item Cross entropy: $\begin{cases} -\log(y) & t=1\\ -\log(1-y) & t=0 \end{cases}$
+  \item \textbf{Step + Squared Error}:\\
+  $y = \ind[z\ge0.5]$, $L_{SE}(y,t) = \frac{1}{2}(y-t)^2$
+  \begin{itemize}
+    \item $\frac{\partial y}{\partial z}=0$ almost everywhere $\to$ zero gradient, can't update $\vw$ (same as 0-1 loss).
+  \end{itemize}
+  \item \textbf{Cross entropy}: $\begin{cases} -\log(y) & t=1\\ -\log(1-y) & t=0 \end{cases}$
 \end{itemize}
-Where cross entropy can be:
+\textbf{Cross entropy}:
 \[ -t\log(y) - (1-t)\log(1-y) \]
 \includegraphics[width=0.45\linewidth]{ce_loss.png}
 
 \subsection{Cross-Entropy Loss Equations}
-\textbf{Linear model}
+\textbf{Linear model}:
 \[ z = \vw^T\vx \]
-\textbf{Classification}
+\textbf{Classification}:
 \begin{align*}
 y &= \sigma(z) = \frac{1}{1+e^{-z}}\\
 \sigma'(z) &= \sigma(z)\left(1-\sigma(z)\right)\\
 \frac{\partial y}{\partial z} &= y(1-y)
 \end{align*}
-\textbf{Loss}
+\textbf{Loss}:
 \[ \cL_{CE}(y,t) = -t\log(y) - (1-t)\log(1-y) \]
-\textbf{Gradient Descent Update}\\
-Where $\cE(\vw) = \frac{1}{N}\sum_{i=1}^N \cL_{CE}\left(y^{(i)}, t^{(i)}\right)$
+\textbf{Gradient}:\\
+Where $\cE(\vw) = \frac{1}{N}\sum_{i=1}^N \cL_{CE}\left(y^{(i)}, t^{(i)}\right)$; for a single example, dropping $(i)$:
 \begin{align*}
 \frac{\partial\cL_{CE}}{\partial w_j} &= \frac{\partial\cL_{CE}}{\partial y}\cdot\frac{\partial y}{\partial z}\cdot\frac{\partial z}{\partial w_j}\\
-&= \left(-\frac{t}{y} + \frac{1-t}{1-y}\right)\cdot y(1-y)\cdot x_j\\
+&= \Big(-\frac{t}{y}+\frac{1-t}{1-y}\Big)\cdot y(1-y)\cdot x_j\\
+&= \frac{y-t}{y(1-y)}\cdot y(1-y)\cdot x_j\\
 &= (y-t)x_j
 \end{align*}
-\textit{Tip: re-use variables, don't sub all!}\\
-The gradient descent update for logistic regression is:
+$\Rightarrow\frac{\partial\cE}{\partial w_j}=\frac1N\sum_{i=1}^N(y^{(i)}-t^{(i)})x_j^{(i)}$\\
+$\Rightarrow\nabla_\vw\cE=\frac1NX^T(\mathbf y-\vt)$, $\mathbf y=\sigma(X\vw)\in\mathbb R^{N\times1}$\\
+\textbf{GD update}:\\
+\sub{Non-vectorized} $w_j\leftarrow w_j-\frac{\alpha}{N}\sum_{i=1}^N(y^{(i)}-t^{(i)})x_j^{(i)}$\\
+\sub{Vectorized} $\vw\leftarrow\vw-\frac{\alpha}{N}X^T(\sigma(X\vw)-\vt)$\\
+\textbf{Pros}:\\
+$\cL\to\infty$ for confident wrong predictions.\\
+$\partial\cL/\partial z=y-t$ (no saturation).\\
+Convex in $\vw$; Maximum likelihood.\\
+\textbf{Sigmoid+SE Cons}: $\partial\cL/\partial z=(y-t)y(1-y)\approx0$ when the prediction is very wrong.\\
+\textbf{Boundary} (threshold $a$: predict 1 iff $y\ge a$):
 \begin{align*}
-w_j &\leftarrow w_j - \alpha\frac{\partial\cE}{\partial w_j}\\
-&= w_j - \frac{\alpha}{N}\sum_{i=1}^N\left(y^{(i)} - t^{(i)}\right)x_j^{(i)}
+\sigma(z)=a&\iff 1+e^{-z}=\tfrac1a\iff e^{-z}=\tfrac{1-a}{a}\\
+&\iff z=\vw^T\vx=\ln\tfrac{a}{1-a}
 \end{align*}
-\[ \vw \leftarrow \vw - \tfrac{\alpha}{N}X^T(\sigma(X\vw)-\vt) \]
-CE: $\cL\to\infty$ for confident wrong; $\partial\cL/\partial z=y-t$ (no saturation); Convex in $\vw$; Max-likelihood. Sigmoid+SE: $\partial\cL/\partial z=(y-t)y(1-y)\approx0$ when very wrong.\\
-\textbf{Boundary}: $y=0.5\iff z=\vw^T\vx=0$ (hyperplane); Class 1 where $z\ge0$.
+Hyperplane; Class 1 where $z\ge\ln\frac{a}{1-a}$ ($\because\sigma$ increasing).\\
+\sub{If $a=0.5$} $\ln\frac{0.5}{0.5}=\ln1=0\Rightarrow$ boundary $\vw^T\vx=0$; Class 1 where $z\ge0$.\\
+\textbf{Steps}:\\
+(1) Write $z=\vw^T\vx=w_0+w_1x_1+w_2x_2$ (with $x_0=1$).\\
+(2) Set $z=\ln\frac{a}{1-a}$ ($=0$ if $a=0.5$) and solve for $x_2$ $\to$ boundary line.\\
+(3) Plug a test point (e.g.\ origin) into $z$: the side with $z>\ln\frac{a}{1-a}$ is class 1, the other side is class 0.\\
+(4) Draw the line through two easy points (intercepts) and label both regions.
+
+\subsection{LogReg vs kNN}
+\textbf{Parametric}: hypothesis space characterized by a fixed-size set of parameters (e.g.\ LogReg).\\
+\textbf{Non-parametric}: complexity can grow with the amount of training data (e.g.\ kNN).\\
+\textbf{Pros} (vs kNN):\\
+\sub{Storage} only $D\!+\!1$ weights, training data discarded after fitting (parametric).\\
+\sub{Prediction} fast, one dot product $\vw^T\vx$ with fixed learned weights, $O(D)$.\\
+\sub{Interpretability} weights rank the features.\\
+\sub{Generalization} good from limited data if the linear assumption holds.\\
+\textbf{Cons}:\\
+\sub{Inductive bias} linear decision boundary $\to$ underfits a nonlinear boundary.\\
+Fixed number of parameters $\to$ complexity doesn't grow with more data (unlike kNN).\\
+{\fontsize{4}{4.7}\selectfont\setlength{\tabcolsep}{3pt}\renewcommand{\arraystretch}{0.95}%
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.22\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+ & \textbf{LogReg} & \textbf{kNN}\\\hline
+Model type & Parametric & Non-parametric\\
+Inductive bias & Linear decision boundary & Nearby inputs share labels\\
+\#Parameters & $D\!+\!1$ weights & Grows with the data\\
+Storage & $D\!+\!1$ weights & Entire training set\\
+Prediction cost & One dot product & Distance to every example\\
+Interpretability & Weights rank the features & Neighbours explain one prediction\\
+Typical failure & Underfits a nonlinear boundary & Overfits when $k$ is small
+\end{tabularx}}\\[2pt]
 
 \subsection{Softmax Regression ($K\ge3$)}
-\textbf{Target} one-hot $\vt\in\{0,1\}^K$ (1 at true class). Not integers: imply order + distance, renumbering changes model; One-hot: no order, all pairs equidistant.\\
-\textbf{Logits} $\mathbf z=W\vx\in\mathbb R^K$, $W\in\mathbb R^{K\times(D+1)}$, row $k=[b_k,\vw_k^T]$, $z_k=\vw_k^T\vx$ (unnormalized). Predict $\arg\max_k z_k$.
+\textbf{Target}: one-hot $\vt\in\{0,1\}^K$ (1 at true class). \sub{Why not integers} imply order + distance, renumbering changes model. \sub{Why one-hot} no order, all pairs equidistant.\\
+\textbf{Logits}: $\mathbf z=W\vx\in\mathbb R^K$, $W\in\mathbb R^{K\times(D+1)}$, row $k=[b_k,\vw_k^T]$, $z_k=\vw_k^T\vx$ (unnormalized). Predict $\arg\max_k z_k$.
 \[ y_k=\tfrac{\exp(z_k)}{\sum_{k'=1}^K\exp(z_{k'})},\quad \mathbf{y}=\text{softmax}(\mathbf z)\in\mathbb R^K \]
-\textbf{Properties}: (1) prob.\ dist.: $y_k\in(0,1)$, $\sum_k y_k=1$. (2) order-preserving ($\because\exp\uparrow$) $\Rightarrow\arg\max y=\arg\max z$, softmax doesn't change boundary; $y_k$ = confidence. (3) smooth, differentiable approx.\ of argmax $\Rightarrow$ GD works. (4) $K=2$: $y_1=\frac{e^{z_1}}{e^{z_1}+e^{z_2}}=\frac{1}{1+e^{-(z_1-z_2)}}=\sigma(z_1\!-\!z_2)$, $y_2=\sigma(-z)$.\\
-\textbf{Loss} $\cL_{CE}=-\sum_k t_k\log y_k=-\vt^T\log\mathbf{y}=-\log y_{\text{true}}$ (1 nonzero term).\\
-\textbf{Grad} $\frac{\partial\cL}{\partial z_k}=y_k-t_k$, $\nabla_{\vw_k}\cL=(y_k-t_k)\vx$
-\[ \vw_k\leftarrow\vw_k-\tfrac{\alpha}{N}\textstyle\sum_i(y_k^{(i)}-t_k^{(i)})\vx^{(i)} \]
-Matrix: $\nabla_W\cE=\frac1N(Y-T)^TX$ ($Y,T\in\mathbb R^{N\times K}$, rows $\mathbf{y}^{(i)T},\vt^{(i)T}$).\\
-\textbf{Boundary $i$/$j$} needs BOTH: (1) $z_i=z_j\iff(\vw_i-\vw_j)^T\vx=0$ (line); (2) $z_k\le z_i\ \forall k\ne i,j$.\\
-\textit{Steps}: solve (1) for line $\to$ substitute into (2) $\to$ inequality gives ray/segment $\to$ all 3 lines meet where $z_1=z_2=z_3$ $\to$ test pt per region. At most $K(K\!-\!1)/2$ boundaries.\\
-Linear boundaries, convex regions; Can't do nonlinear.
+\textbf{Properties}:\\
+(1) Probability distribution: $y_k\in(0,1)$, $\sum_k y_k=1$.\\
+(2) Order-preserving ($\because\exp\uparrow$) $\Rightarrow\arg\max y=\arg\max z$, softmax doesn't change the boundary; $y_k$ = confidence.\\
+(3) Smooth, differentiable approximation of argmax $\Rightarrow$ GD works.\\
+(4) $K=2$: $y_1=\frac{e^{z_1}}{e^{z_1}+e^{z_2}}=\frac{1}{1+e^{-(z_1-z_2)}}=\sigma(z_1\!-\!z_2)$, $y_2=\sigma(-z)$.\\
+\textbf{Loss}: $\cL_{CE}=-\sum_k t_k\log y_k=-\vt^T\log\mathbf{y}=-\log y_{\text{true}}$ (1 nonzero term).\\
+\textbf{Gradient}:\\
+$\frac{\partial\cL}{\partial z_k}=y_k-t_k\Rightarrow\nabla_{\vw_k}\cL=(y_k-t_k)\vx$\\
+$\Rightarrow\nabla_{\vw_k}\cE=\frac1N\sum_{i=1}^N(y_k^{(i)}-t_k^{(i)})\vx^{(i)}$\\
+$\Rightarrow\nabla_W\cE=\frac1N(Y-T)^TX\in\mathbb R^{K\times(D+1)}$ ($Y,T\in\mathbb R^{N\times K}$, rows $\mathbf{y}^{(i)T},\vt^{(i)T}$)\\
+\textbf{GD update}:\\
+\sub{Non-vectorized} $\vw_k\leftarrow\vw_k-\frac{\alpha}{N}\sum_{i=1}^N(y_k^{(i)}-t_k^{(i)})\vx^{(i)}$ (each $k$)\\
+\sub{Vectorized} $W\leftarrow W-\frac{\alpha}{N}(Y-T)^TX$\\
+\textbf{Boundary $i$/$j$}: needs BOTH, (1) $z_i=z_j\iff(\vw_i-\vw_j)^T\vx=0$ (line); (2) $z_k\le z_i\ \forall k\ne i,j$.\\
+\textbf{Steps}: solve (1) for line $\to$ substitute into (2) $\to$ inequality gives ray/segment $\to$ all 3 lines meet where $z_1=z_2=z_3$ $\to$ test a point per region. At most $K(K\!-\!1)/2$ boundaries.\\
+\textbf{Cons}: linear boundaries only (convex regions); Can't do nonlinear.
 
 \end{multicols*}
 \end{document}
