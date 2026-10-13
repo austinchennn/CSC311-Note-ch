@@ -211,6 +211,48 @@ AND $f(x_1\!+\!x_2\!-\!1.5)$; OR $f(x_1\!+\!x_2\!-\!0.5)$; NOT $f(-x_1\!+\!0.5)$
 
 
 \section{The Backpropagation Algorithm}
+\textbf{Goal}: $\partial\cL/\partial$ every weight \& bias for GD. \sub{Problem} millions of params, computing each derivative from scratch is infeasible. \sub{Fix} backprop: all gradients in 1 backward pass $\approx2\times$ cost of 1 forward pass. \sub{Per example} cost gradient = average of per-example loss gradients.\\
+\textbf{Computation graph} \sub{Def} directed graph, nodes = scalar quantities of the forward pass (weights, biases, $z$, $a$, $\cL$); Edge $u\to v$ = $v$ computed from $u$. \sub{vs network diagram} weight = node (not edge); $z$ and $a$ = separate nodes. \sub{Steps to draw} one node per forward equation's LHS + every input it uses; Arrow from each input to the LHS; End at $\cL$ (and $\vt$ feeds $\cL$).\\
+\textbf{Fan-out} \sub{Def} node with $>1$ outgoing edge (value used by $>1$ downstream node). \sub{Effect} its gradient = sum over all outgoing paths.\\
+\textbf{Single-variable chain rule}: $u=g(x)$, $y=h(u)$: $\frac{\partial y}{\partial x}=\frac{\partial y}{\partial u}\frac{\partial u}{\partial x}$ (one path).\\
+\textbf{Multivariate chain rule}: $v_\ell=g_\ell(u)$, $y=h(v_1,\dots,v_m)$: $\frac{\partial y}{\partial u}=\sum_{\ell=1}^m\frac{\partial y}{\partial v_\ell}\frac{\partial v_\ell}{\partial u}$ (one term per child).\\
+\textbf{Backward pass} \sub{Def} traverse the graph from $\cL$ in reverse topological order, applying the chain rule. \sub{Rule} each node's gradient $=\sum_{\text{children }c}\overline{c}\cdot\frac{\partial c}{\partial\text{node}}$ ($\overline{v}:=\partial\cL/\partial v$); Start $\overline{\cL}=1$.\\
+\textbf{Dynamic programming} \sub{Def} split into overlapping subproblems, solve each once in dependency order, store \& reuse. \sub{Backprop} subproblem = $\partial\cL/\partial$ node; $\partial\cL/\partial z^{(m)}_j$ reused by every weight into unit $j$ and by layer $m\!-\!1$. \sub{Naive cons} $\partial\cL/\partial z^{(M)}$ recomputed for every path, cost grows with depth.\\
+\textbf{Why compute $\overline{h}$ / $\overline{a}$ if $h$ is not a param}: intermediate subproblem, needed (and reused) to reach the gradients of all earlier weights.\\
+\textbf{Why forward pass first}: backward needs input-dependent values $f'(z^{(m)})$, $a^{(m-1)}$, $\partial\cL/\partial a^{(M)}$ (depends on $\va^{(M)},\vt$); Only the formulas are known beforehand, not their values. \sub{Steps} forward (store all $z,a$) $\to$ backward $\to$ GD update.
+\subsection{Backprop Equations ($M$ layers)}
+\sub{Non-vectorized}
+\begin{align*}
+\tfrac{\partial\cL}{\partial z^{(M)}_j}&=\tfrac{\partial\cL}{\partial a^{(M)}_j}f^{(M)\prime}(z^{(M)}_j)\\
+\tfrac{\partial\cL}{\partial a^{(m)}_j}&=\textstyle\sum_{\ell=1}^{D^{(m+1)}}\tfrac{\partial\cL}{\partial z^{(m+1)}_\ell}W^{(m+1)}_{\ell,j}\\
+\tfrac{\partial\cL}{\partial z^{(m)}_j}&=\tfrac{\partial\cL}{\partial a^{(m)}_j}f^{(m)\prime}(z^{(m)}_j)\\
+\tfrac{\partial\cL}{\partial W^{(m)}_{j,k}}&=\tfrac{\partial\cL}{\partial z^{(m)}_j}a^{(m-1)}_k,\quad\tfrac{\partial\cL}{\partial b^{(m)}_j}=\tfrac{\partial\cL}{\partial z^{(m)}_j}
+\end{align*}
+\sub{Vectorized}
+\begin{align*}
+\nabla_{\vz^{(M)}}\cL&=\nabla_{\va^{(M)}}\cL\odot f^{(M)\prime}(\vz^{(M)})\\
+\nabla_{\vz^{(m)}}\cL&=(W^{(m+1)})^T\nabla_{\vz^{(m+1)}}\cL\odot f^{(m)\prime}(\vz^{(m)})\\
+\nabla_{W^{(m)}}\cL&=\nabla_{\vz^{(m)}}\cL\,(\va^{(m-1)})^T,\quad\nabla_{\vb^{(m)}}\cL=\nabla_{\vz^{(m)}}\cL
+\end{align*}
+\textbf{3 operations}: matrix-vector ($W^T\overline{\vz}$, sum over children), Hadamard $\odot$ (element-wise $f'$; $=\operatorname{diag}(\overline{\va})f'(\vz)$), outer product ($\overline{\vz}\,\va^T$). \sub{Dim check} $\nabla_W\cL$ same shape as $W$ ($D^{(m)}\times D^{(m-1)}$); $\nabla_{\va^{(m)}}\cL\in\mathbb R^{D^{(m)}}$ $\to$ needs $W^T$, not $W$.\\
+\textbf{Output shortcuts}: softmax+CE, $\sigma$+BCE, identity+SE all give $\nabla_{\vz^{(M)}}\cL=\vy-\vt$.\\
+\textbf{GD update}:\\
+\sub{Non-vectorized} $W^{(m)}_{j,k}\leftarrow W^{(m)}_{j,k}-\alpha\frac{\partial\cE}{\partial W^{(m)}_{j,k}}$,\ \ $b^{(m)}_j\leftarrow b^{(m)}_j-\alpha\frac{\partial\cE}{\partial b^{(m)}_j}$\\
+\sub{Vectorized} $W^{(m)}\leftarrow W^{(m)}-\alpha\nabla_{W^{(m)}}\cE$,\ \ $\vb^{(m)}\leftarrow\vb^{(m)}-\alpha\nabla_{\vb^{(m)}}\cE$
+
+\subsection{Vectorizing (1 hidden, ReLU, softmax, CE)}
+\textbf{Single point}: $\vz^{(1)}=W^{(1)}\va^{(0)}+\vb^{(1)}$; $\va^{(2)}=\frac{\exp(\vz^{(2)})}{\mathbf 1^T\exp(\vz^{(2)})}$ ($\mathbf 1^T$ sums); $\cL=-\vt^T\log\va^{(2)}$.\\
+\textbf{Batch} (rows = examples, $A^{(m)},Z^{(m)}\in\mathbb R^{N\times D^{(m)}}$, $T\in\mathbb R^{N\times D^{(2)}}$):\\
+\sub{Forward} $Z^{(1)}=A^{(0)}W^{(1)T}+\mathbf 1_N\vb^{(1)T}$; $A^{(1)}=\text{ReLU}(Z^{(1)})$; $Z^{(2)}=A^{(1)}W^{(2)T}+\mathbf 1_N\vb^{(2)T}$; $A^{(2)}=\exp(Z^{(2)})\oslash\big(\exp(Z^{(2)})\mathbf 1\mathbf 1^T\big)$; $\cE=-\frac1N\mathbf 1_N^T(T\odot\log A^{(2)})\mathbf 1$.\\
+\sub{Backward} $\nabla_{Z^{(2)}}=\frac1N(A^{(2)}-T)$; $\nabla_{W^{(2)}}=\nabla_{Z^{(2)}}^TA^{(1)}$; $\nabla_{\vb^{(2)}}=\nabla_{Z^{(2)}}^T\mathbf 1_N$; $\nabla_{A^{(1)}}=\nabla_{Z^{(2)}}W^{(2)}$; $\nabla_{Z^{(1)}}=\nabla_{A^{(1)}}\odot\text{ReLU}'(Z^{(1)})$; $\nabla_{W^{(1)}}=\nabla_{Z^{(1)}}^TA^{(0)}$; $\nabla_{\vb^{(1)}}=\nabla_{Z^{(1)}}^T\mathbf 1_N$. \sub{Rule} sum over $n$ $\to$ $\nabla^T$(\ldots) or $\nabla^T\mathbf 1_N$; Batch form = transpose of single form.
+
+\subsection{Special Graph Patterns}
+\textbf{Variable used twice} (fan-out, incl.\ input): gradients from each use add. \sub{Ex} $z=wx+b$, $y=x+\tanh z$, $\cL=\frac12(y-t)^2$: $\overline y=y-t$; $\overline z=\overline y(1-\tanh^2z)$; $\overline w=\overline z\,x$; $\overline b=\overline z$; $\overline x=\overline y+\overline z\,w$.\\
+\textbf{Skip connection} $\mathbf h_2=\text{ReLU}(\vz_2)+\vz_s$, $\vz_s=W_s\vx$: \sub{Effect} $\overline{\vz_s}=\overline{\mathbf h_2}$ (addition copies gradient); $\nabla_{W_s}=\overline{\vz_s}\vx^T$; $\overline{\vx}=W_1^T\overline{\vz_1}+W_s^T\overline{\vz_s}$.\\
+\textbf{Element-wise product} $\mathbf h=\mathbf h^{(a)}\odot\mathbf h^{(b)}$: $\overline{\mathbf h^{(a)}}=\overline{\mathbf h}\odot\mathbf h^{(b)}$, $\overline{\mathbf h^{(b)}}=\overline{\mathbf h}\odot\mathbf h^{(a)}$ (swap partner).\\
+\textbf{Shared weights} (twin net, $W^{(1)}$ used for $\vx^{(a)}$ and $\vx^{(b)}$): \sub{Rule} sum the gradient of each use: $\nabla_{W^{(1)}}=\overline{\mathbf m^{(a)}}\vx^{(a)T}+\overline{\mathbf m^{(b)}}\vx^{(b)T}$, $\nabla_{\vb^{(1)}}=\overline{\mathbf m^{(a)}}+\overline{\mathbf m^{(b)}}$, $\overline{\mathbf m^{(\cdot)}}=\overline{\mathbf h^{(\cdot)}}\odot\text{ReLU}'(\mathbf m^{(\cdot)})$.\\
+\textbf{No bias / arbitrary DAG}: write forward eqs per unit ($m_j=\sum w x$, $h_j=f(m_j)$), then backward in reverse order; Hidden unit with 2 children: $\overline{h_1}=\overline{m_3}w_5+\overline{m_4}w_7$.\\
+\textbf{$f'$ to plug in}: $\sigma'=\sigma(1-\sigma)$; $\tanh'=1-\tanh^2$; $\text{ReLU}'=\ind[z>0]$.
 
 \section{Bias-Variance Decomposition, Ensembles}
 
